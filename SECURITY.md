@@ -34,11 +34,18 @@ Security updates will be released as patch versions (e.g., 0.1.1) for the latest
 
 ## Dependencies
 
-We regularly update our dependencies to include security fixes. You can check for known vulnerabilities in our dependencies using:
+We regularly update our dependencies to include security fixes, and CI runs an
+OWASP dependency-check gate (see `.github/workflows/dependency-check.yml`) that
+fails the build on any dependency with a CVSS score of 7 or higher.
+
+You can run the same multi-module scan locally with:
 
 ```bash
-mvn dependency-check:check
+mvn org.owasp:dependency-check-maven:aggregate
 ```
+
+Set an [NVD API key](https://nvd.nist.gov/developers/request-an-api-key) via
+`-Dnvd.api.key=<key>` to avoid rate limiting.
 
 ## Best Practices
 
