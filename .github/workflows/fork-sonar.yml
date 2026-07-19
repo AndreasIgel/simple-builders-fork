@@ -7,28 +7,38 @@
 #
 # It runs on `workflow_run` in the base-repo context (with secrets), and is
 # protected by the `fork-ci` GitHub Environment with Required reviewers.
-# Do NOT remove that environment gate.
+# Do NOT remove that environment gate. It can also be started manually
+# (workflow_dispatch) for a given successful CI run id; the environment
+# approval still applies.
 name: Fork SonarCloud (manual approval)
 
 on:
   workflow_run:
     workflows: ["Java CI with Maven"]
     types: [completed]
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "ID of the successful 'Java CI with Maven' fork-PR run to analyse"
+        required: true
+        type: string
 
 permissions:
   contents: read
   actions: read
 
 concurrency:
-  group: fork-sonar-${{ github.event.workflow_run.id }}
+  group: fork-sonar-${{ github.event.workflow_run.id || github.event.inputs.run_id }}
   cancel-in-progress: true
 
 jobs:
   sonar:
+    # Runs after a successful fork-PR CI run, or on demand for a given run.
     if: >
-      github.event.workflow_run.event == 'pull_request' &&
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.head_repository.full_name != github.event.workflow_run.repository.full_name
+      github.event_name == 'workflow_dispatch' ||
+      ( github.event.workflow_run.event == 'pull_request' &&
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.head_repository.full_name != github.event.workflow_run.repository.full_name )
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: fork-ci
@@ -42,7 +52,7 @@ jobs:
         with:
           name: sonar-analysis-inputs
           path: ${{ runner.temp }}/sonar-analysis-data
-          run-id: ${{ github.event.workflow_run.id }}
+          run-id: ${{ github.event.workflow_run.id || github.event.inputs.run_id }}
           github-token: ${{ github.token }}
 
       - name: Read PR metadata

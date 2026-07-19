@@ -6,12 +6,20 @@
 # the main CI completes, downloads ONLY the coverage data artifact that the CI
 # build produced, and uploads it to Codecov. It never checks out or executes
 # fork code, so there is no risk of leaking secrets to untrusted contributions.
+#
+# It can also be started manually (workflow_dispatch) for a given CI run id.
 name: Fork coverage (Codecov)
 
 on:
   workflow_run:
     workflows: ["Java CI with Maven"]
     types: [completed]
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "ID of the 'Java CI with Maven' fork-PR run whose coverage artifact to publish"
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -19,11 +27,12 @@ permissions:
 
 jobs:
   codecov:
-    # Only for PRs that originate from a fork (same-repo PRs upload directly in
-    # the main CI workflow, which has secrets).
+    # Runs automatically after a fork-PR CI run, or on demand for a given run.
+    # Same-repo PRs upload directly in the main CI workflow (which has secrets).
     if: >
-      github.event.workflow_run.event == 'pull_request' &&
-      github.event.workflow_run.head_repository.full_name != github.event.workflow_run.repository.full_name
+      github.event_name == 'workflow_dispatch' ||
+      ( github.event.workflow_run.event == 'pull_request' &&
+        github.event.workflow_run.head_repository.full_name != github.event.workflow_run.repository.full_name )
     runs-on: ubuntu-latest
     env:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -33,7 +42,7 @@ jobs:
         with:
           name: codecov-payload
           path: codecov-payload
-          run-id: ${{ github.event.workflow_run.id }}
+          run-id: ${{ github.event.workflow_run.id || github.event.inputs.run_id }}
           github-token: ${{ github.token }}
 
       - name: Read PR metadata
