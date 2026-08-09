@@ -25,6 +25,9 @@ permissions:
 
 jobs:
   dependency-review:
+    # This action requires the dependency graph to be enabled, which is not
+    # usually the case for forks. Skip on forks to avoid unnecessary failures.
+    if: github.event.repository.fork == false
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout repository'

@@ -24,6 +24,13 @@ jobs:
       pull-requests: write
       checks: write
 
+    # Expose secret-backed tokens as env so steps can be gated on their
+    # availability. On fork/Dependabot PRs secrets are withheld and resolve to
+    # an empty string, so the dependent steps are skipped rather than failing.
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
     steps:
     - uses: actions/checkout@v4
       with:
@@ -75,8 +82,8 @@ jobs:
         fi
 
     - name: SonarCloud Analysis
-      # Skip for Dependabot PRs (no access to secrets)
-      if: github.actor != 'dependabot[bot]'
+      # Skip when SONAR_TOKEN is unavailable (fork/Dependabot PRs).
+      if: env.SONAR_TOKEN != ''
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar --file pom.xml
@@ -98,8 +105,8 @@ jobs:
         if-no-files-found: warn
 
     - name: Upload test results to Codecov (processor)
-      # Skip for Dependabot PRs (no access to secrets)
-      if: always() && github.actor != 'dependabot[bot]'
+      # Skip when CODECOV_TOKEN is unavailable (fork/Dependabot PRs).
+      if: always() && env.CODECOV_TOKEN != ''
       uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1.1.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -110,8 +117,8 @@ jobs:
         verbose: false
 
     - name: Upload coverage to Codecov (processor)
-      # Skip for Dependabot PRs (no access to secrets)
-      if: always() && github.actor != 'dependabot[bot]'
+      # Skip when CODECOV_TOKEN is unavailable (fork/Dependabot PRs).
+      if: always() && env.CODECOV_TOKEN != ''
       uses: codecov/codecov-action@015f24e6818733317a2da2edd6290ab26238649a # v5.0.7
       with:
         fail_ci_if_error: true
