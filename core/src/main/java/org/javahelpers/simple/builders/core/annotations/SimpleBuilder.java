@@ -54,8 +54,19 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  *
  * <p>Use {@link Template} to create reusable configuration presets.
  *
+ * <p>Related annotations:
+ *
+ * <ul>
+ *   <li>{@link IgnoreInBuilder} - exclude individual setters/constructors from builder generation
+ *   <li>{@link Ignore4BuilderGeneration} - exclude a class/record from builder generation, even
+ *       when an inherited {@code @SimpleBuilder} or {@code @SimpleBuilder.Template} would otherwise
+ *       trigger it
+ * </ul>
+ *
  * @see Options
  * @see Template
+ * @see IgnoreInBuilder
+ * @see Ignore4BuilderGeneration
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)

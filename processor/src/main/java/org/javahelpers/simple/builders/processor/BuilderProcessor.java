@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -38,10 +39,13 @@ import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder.Template;
+import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
 import org.javahelpers.simple.builders.processor.classgen.roaster.RoasterCodeGenerator;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.generators.integration.JacksonModuleGenerator;
@@ -146,6 +150,23 @@ public class BuilderProcessor extends AbstractProcessor {
     for (TypeElement annotation : annotationsWithTemplate) {
       elementsToProcess.addAll(roundEnv.getElementsAnnotatedWith(annotation));
     }
+
+    // Filter out elements explicitly opted out via @Ignore4BuilderGeneration.
+    // Only directly-declared annotations are checked: the type itself must carry
+    // the opt-out; a parent carrying it does not cascade, matching the fact that
+    // @Ignore4BuilderGeneration is intentionally NOT @Inherited.
+    elementsToProcess.removeIf(
+        element -> {
+          Optional<AnnotationMirror> ignoreAnnotation =
+              JavaLangAnalyser.findAnnotation(element, Ignore4BuilderGeneration.class);
+          if (ignoreAnnotation.isPresent()) {
+            context.debug(
+                "Skipping element '%s' due to @Ignore4BuilderGeneration opt-out.",
+                element.getSimpleName());
+            return true;
+          }
+          return false;
+        });
 
     context.info("simple-builders: PROCESSING ROUND START");
     context.debug(

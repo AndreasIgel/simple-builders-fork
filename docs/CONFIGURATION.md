@@ -7,6 +7,7 @@ Simple-builders supports fine-grained configuration through the `@SimpleBuilder.
 - [Overview](#overview)
 - [Annotation Configuration](#annotation-configuration)
 - [Template Annotations](#template-annotations)
+- [Excluding Types from Builder Generation](#excluding-types-from-builder-generation)
 - [Compiler Options](#compiler-options)
   - [Maven Configuration](#maven-configuration)
   - [Gradle Configuration](#gradle-configuration)
@@ -115,6 +116,22 @@ public class PersonDto {
     private String name;
 }
 ```
+
+## Excluding Types from Builder Generation
+
+You can opt a whole DTO out of builder generation with `@Ignore4BuilderGeneration`. This is useful when a class inherits `@SimpleBuilder` or an `@SimpleBuilder.Template` annotation from a parent and you do not want a builder for that specific subclass.
+
+```java
+import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
+
+@Ignore4BuilderGeneration
+public class IgnoredDto extends ParentDto {
+    // No builder will be generated for IgnoredDto, even if ParentDto carries
+    // @SimpleBuilder or an @Inherited template annotation.
+}
+```
+
+A type marked with `@Ignore4BuilderGeneration` is treated as having **no builder available**. Other builders that reference it will fall back to plain setters instead of emitting nested-builder consumers. The annotation is intentionally **not** `@Inherited`, so it only suppresses the exact type it is placed on and does not cascade to further subclasses.
 
 ## Compiler Options
 

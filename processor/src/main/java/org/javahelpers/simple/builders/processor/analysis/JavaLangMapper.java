@@ -43,6 +43,7 @@ import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.SimpleTypeVisitor14;
+import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
@@ -214,6 +215,11 @@ public final class JavaLangMapper {
    */
   private static void setBuilderTypeIfAnnotated(
       TypeName typeName, TypeElement typeElement, ProcessingContext context) {
+    // Types explicitly opted out must never be referenced as builders by other DTOs.
+    if (JavaLangAnalyser.findAnnotation(typeElement, Ignore4BuilderGeneration.class).isPresent()) {
+      return;
+    }
+
     Optional<javax.lang.model.element.AnnotationMirror> foundBuilderAnnotation =
         JavaLangAnalyser.findAnnotation(
             typeElement, org.javahelpers.simple.builders.core.annotations.SimpleBuilder.class);
@@ -267,6 +273,12 @@ public final class JavaLangMapper {
 
     // Element type must be resolvable
     if (elementTypeElement == null) {
+      return;
+    }
+
+    // Opted-out element types must never be referenced as element builders.
+    if (JavaLangAnalyser.findAnnotation(elementTypeElement, Ignore4BuilderGeneration.class)
+        .isPresent()) {
       return;
     }
 
