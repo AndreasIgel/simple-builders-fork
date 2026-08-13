@@ -120,7 +120,7 @@ public class PersonDto {
 
 ## Excluding Types from Builder Generation
 
-You can opt a whole DTO out of builder generation with `@Ignore4BuilderGeneration`. This is useful when a class inherits `@SimpleBuilder` or an `@SimpleBuilder.Template` annotation from a parent and you do not want a builder for that specific subclass.
+You can opt a whole DTO out of builder generation with `@Ignore4BuilderGeneration`. This is useful when a class inherits an `@SimpleBuilder.Template` annotation (i.e. a custom annotation that is itself meta-annotated with `@Inherited`) from a parent and you do not want a builder for that specific subclass.
 
 ```java
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
@@ -128,7 +128,7 @@ import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration
 @Ignore4BuilderGeneration
 public class IgnoredDto extends ParentDto {
     // No builder will be generated for IgnoredDto, even if ParentDto carries
-    // @SimpleBuilder or an @Inherited template annotation.
+    // an @Inherited @SimpleBuilder.Template annotation.
 }
 ```
 

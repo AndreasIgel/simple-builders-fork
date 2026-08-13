@@ -60,6 +60,103 @@ class Ignore4BuilderGenerationTest {
   }
 
   /**
+   * A plain {@code @SimpleBuilder} annotation on a parent is <b>not</b> inherited by an unannotated
+   * child class. The processor only discovers inherited annotations through the compiler's
+   * {@code @Inherited} mechanism (which {@code @SimpleBuilder} does not have).
+   */
+  @Test
+  void simpleBuilderAnnotationIsNotInherited() {
+    JavaFileObject parentSource =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public class ParentWithSimpleBuilder {
+                private String name;
+                public String getName() { return name; }
+                public void setName(String name) { this.name = name; }
+            }
+            """);
+
+    JavaFileObject childSource =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            public class ChildOfSimpleBuilder extends ParentWithSimpleBuilder { }
+            """);
+
+    Compilation compilation = compile(parentSource, childSource);
+
+    assertThat(compilation).succeededWithoutWarnings();
+
+    String parentBuilder = loadGeneratedSource(compilation, "ParentWithSimpleBuilderBuilder");
+    assertGenerationSucceeded(compilation, "ParentWithSimpleBuilderBuilder", parentBuilder);
+
+    assertNoBuilderGenerated(
+        compilation,
+        "ChildOfSimpleBuilder",
+        "A plain @SimpleBuilder annotation on a parent must not be inherited by subclasses");
+  }
+
+  /**
+   * A custom annotation that is meta-annotated with {@code @SimpleBuilder.Template} and
+   * {@code @Inherited} <b>is</b> inherited by an unannotated child class, because the annotation
+   * processor discovers it through {@code RoundEnvironment#getElementsAnnotatedWith}.
+   */
+  @Test
+  void templateAnnotationIsInherited() {
+    JavaFileObject templateAnnotation =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            import java.lang.annotation.ElementType;
+            import java.lang.annotation.Inherited;
+            import java.lang.annotation.Retention;
+            import java.lang.annotation.RetentionPolicy;
+            import java.lang.annotation.Target;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder.Template(options = @SimpleBuilder.Options())
+            @Inherited
+            @Retention(RetentionPolicy.CLASS)
+            @Target(ElementType.TYPE)
+            public @interface InheritedTemplateCheck {}
+            """);
+
+    JavaFileObject parentSource =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            @InheritedTemplateCheck
+            public class ParentWithTemplate {
+                private String name;
+                public String getName() { return name; }
+                public void setName(String name) { this.name = name; }
+            }
+            """);
+
+    JavaFileObject childSource =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            public class ChildOfTemplate extends ParentWithTemplate { }
+            """);
+
+    Compilation compilation = compile(templateAnnotation, parentSource, childSource);
+
+    assertThat(compilation).succeededWithoutWarnings();
+
+    String parentBuilder = loadGeneratedSource(compilation, "ParentWithTemplateBuilder");
+    assertGenerationSucceeded(compilation, "ParentWithTemplateBuilder", parentBuilder);
+
+    String childBuilder = loadGeneratedSource(compilation, "ChildOfTemplateBuilder");
+    assertGenerationSucceeded(compilation, "ChildOfTemplateBuilder", childBuilder);
+  }
+
+  /**
    * (a) A subclass that inherits a template annotation from its parent and is annotated with
    * {@code @Ignore4BuilderGeneration} must NOT get a builder, while the parent's builder is still
    * generated.

@@ -30,16 +30,16 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Placed on a class/record to exclude it from builder generation, even if {@code @SimpleBuilder} or
- * a {@code @SimpleBuilder.Template} annotation is inherited from a parent type.
+ * Placed on a class/record to exclude it from builder generation, even if an
+ * {@code @SimpleBuilder.Template} annotation (i.e. a custom {@code @Inherited} template annotation)
+ * is inherited from a parent type.
  *
  * <p>A type marked with this annotation is treated as having no builder available: other builders
  * never reference a builder for it and fall back to plain setters.
  *
  * <p>This annotation is intentionally <b>not</b> {@code @Inherited}. It only suppresses builder
  * generation for the exact type it is placed on and does not cascade to further subclasses, which
- * may therefore still get a builder from an inherited {@code @SimpleBuilder} or template
- * annotation.
+ * may therefore still get a builder from an inherited template annotation.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)

@@ -54,13 +54,17 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  *
  * <p>Use {@link Template} to create reusable configuration presets.
  *
+ * <p>{@code @SimpleBuilder} itself is not inherited by subclasses. To trigger builder generation
+ * for an entire class hierarchy, define a custom annotation with {@link Template} and meta-annotate
+ * it with {@code @Inherited}.
+ *
  * <p>Related annotations:
  *
  * <ul>
  *   <li>{@link IgnoreInBuilder} - exclude individual setters/constructors from builder generation
  *   <li>{@link Ignore4BuilderGeneration} - exclude a class/record from builder generation, even
- *       when an inherited {@code @SimpleBuilder} or {@code @SimpleBuilder.Template} would otherwise
- *       trigger it
+ *       when an inherited {@code @SimpleBuilder.Template} (i.e. a custom {@code @Inherited}
+ *       template annotation) would otherwise trigger it
  * </ul>
  *
  * @see Options
@@ -721,7 +725,8 @@ public @interface SimpleBuilder {
    * <ul>
    *   <li>{@link IgnoreInBuilder} - exclude individual setters/constructors from builder generation
    *   <li>{@link Ignore4BuilderGeneration} - exclude a class/record from builder generation, even
-   *       when this template is inherited from a parent type
+   *       when this template is inherited from a parent type through a custom annotation that is
+   *       meta-annotated with {@code @Inherited}
    * </ul>
    *
    * @see IgnoreInBuilder
