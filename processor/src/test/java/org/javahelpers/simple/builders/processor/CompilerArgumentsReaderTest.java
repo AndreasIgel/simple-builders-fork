@@ -353,6 +353,8 @@ class CompilerArgumentsReaderTest {
             .put("simplebuilder.copyTypeAnnotations", "enabled")
             .put("simplebuilder.builderSuffix", "Factory")
             .put("simplebuilder.setterSuffix", "with")
+            .put("simplebuilder.builderGenerationPackages", "com.example.generation")
+            .put("simplebuilder.builderUsagePackages", "com.example.usage, com.example.usage2")
             .build();
     CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
 
@@ -368,6 +370,8 @@ class CompilerArgumentsReaderTest {
     assertEquals(OptionState.ENABLED, config.copyTypeAnnotations());
     assertEquals("Factory", config.getBuilderSuffix());
     assertEquals("with", config.getSetterSuffix());
+    assertEquals("com.example.generation", config.getBuilderGenerationPackages());
+    assertEquals("com.example.usage, com.example.usage2", config.getBuilderUsagePackages());
   }
 
   /** Test: readBuilderConfiguration handles mixed valid and invalid values. */
@@ -402,6 +406,8 @@ class CompilerArgumentsReaderTest {
             .put("simplebuilder.builderAccess", "")
             .put("simplebuilder.builderSuffix", "")
             .put("simplebuilder.setterSuffix", "")
+            .put("simplebuilder.builderGenerationPackages", "")
+            .put("simplebuilder.builderUsagePackages", "")
             .build();
     CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
 
@@ -411,5 +417,7 @@ class CompilerArgumentsReaderTest {
     assertEquals(AccessModifier.DEFAULT, config.getBuilderAccess(), "Empty should be DEFAULT");
     assertEquals("", config.getBuilderSuffix(), "Empty string should be preserved for suffix");
     assertEquals("", config.getSetterSuffix(), "Empty string should be preserved for suffix");
+    assertEquals(null, config.getBuilderGenerationPackages(), "Empty package list should be null");
+    assertEquals(null, config.getBuilderUsagePackages(), "Empty package list should be null");
   }
 }

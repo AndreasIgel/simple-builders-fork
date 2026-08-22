@@ -81,6 +81,9 @@ class ConfigurationProcessingTest {
             .generateWithInterface(OptionState.ENABLED)
             .usingJacksonDeserializerAnnotation(OptionState.ENABLED)
             .generateJacksonModule(OptionState.ENABLED)
+            // Scoping
+            .builderGenerationPackages("com.example.generation")
+            .builderUsagePackages("com.example.usage, com.example.usage2")
             // Naming
             .builderSuffix("Builder")
             .setterSuffix("")
@@ -112,6 +115,8 @@ class ConfigurationProcessingTest {
     assertEquals(OptionState.ENABLED, config.generateJacksonModule());
     assertEquals("Builder", config.getBuilderSuffix());
     assertEquals("", config.getSetterSuffix());
+    assertEquals("com.example.generation", config.getBuilderGenerationPackages());
+    assertEquals("com.example.usage, com.example.usage2", config.getBuilderUsagePackages());
   }
 
   /**

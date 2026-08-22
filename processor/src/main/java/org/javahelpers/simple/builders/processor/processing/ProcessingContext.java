@@ -24,7 +24,9 @@
 
 package org.javahelpers.simple.builders.processor.processing;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.PackageElement;
@@ -32,6 +34,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.generators.registry.GeneratorRegistry;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -49,7 +52,9 @@ public final class ProcessingContext {
   private final BuilderConfigurationReader configurationReader;
   private final ProcessingEnvironment processingEnv;
   private GeneratorRegistry generatorRegistry;
+  private BuilderScopeResolver builderScopeResolver;
   private BuilderConfiguration configurationForProcessingTarget;
+  private final Set<String> generatedTypeNames = new HashSet<>();
 
   /**
    * Creates a new processing context.
@@ -78,6 +83,8 @@ public final class ProcessingContext {
    */
   public void initConfigurationForProcessingTarget(BuilderConfiguration config) {
     this.configurationForProcessingTarget = config;
+    // Recompute scope resolver for the new target configuration
+    this.builderScopeResolver = null;
   }
 
   /**
@@ -111,6 +118,50 @@ public final class ProcessingContext {
       generatorRegistry = new GeneratorRegistry(this, processingEnv);
     }
     return generatorRegistry;
+  }
+
+  /**
+   * Get the builder scope resolver for the current target configuration.
+   *
+   * <p>The resolver is lazily initialized on first access and invalidated when the target
+   * configuration changes.
+   *
+   * @return the builder scope resolver
+   */
+  public BuilderScopeResolver getBuilderScopeResolver() {
+    if (builderScopeResolver == null) {
+      builderScopeResolver = new BuilderScopeResolver(this);
+    }
+    return builderScopeResolver;
+  }
+
+  /**
+   * Registers the set of types that will actually have builders generated in the current processing
+   * round.
+   *
+   * <p>The builder scope resolver uses this set to trust in-compilation references without a
+   * type-existence search.
+   *
+   * @param elements the annotated elements selected for builder generation
+   */
+  public void setGeneratedTypeNames(Set<? extends Element> elements) {
+    generatedTypeNames.clear();
+    for (Element element : elements) {
+      if (element instanceof TypeElement typeElement) {
+        generatedTypeNames.add(typeElement.getQualifiedName().toString());
+      }
+    }
+  }
+
+  /**
+   * Returns whether the given type is among the types that will have builders generated in the
+   * current processing round.
+   *
+   * @param typeElement the type element to check
+   * @return true if a builder will be generated for the type, false otherwise
+   */
+  public boolean isGeneratedType(TypeElement typeElement) {
+    return generatedTypeNames.contains(typeElement.getQualifiedName().toString());
   }
 
   /**
@@ -165,6 +216,17 @@ public final class ProcessingContext {
   @SuppressWarnings("java:S1452")
   public List<? extends Element> getAllMembers(TypeElement typeElement) {
     return elementUtils.getAllMembers(typeElement);
+  }
+
+  /**
+   * Get all annotation mirrors for the given type, including inherited ones.
+   *
+   * @param typeElement the type to inspect
+   * @return list of all annotation mirrors
+   */
+  public List<? extends javax.lang.model.element.AnnotationMirror> getAllAnnotationMirrors(
+      TypeElement typeElement) {
+    return elementUtils.getAllAnnotationMirrors(typeElement);
   }
 
   /**

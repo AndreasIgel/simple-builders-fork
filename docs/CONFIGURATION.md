@@ -680,6 +680,32 @@ See [**CUSTOMIZING.md**](CUSTOMIZING.md) for complete implementation examples an
 
 ---
 
+### Builder Scoping
+
+#### `builderGenerationPackages`
+
+**Default**: `""` (empty) | **Compiler Option**: `-Asimplebuilder.builderGenerationPackages=pkg1,pkg2,...`
+
+Restricts builder generation to DTOs whose package equals or is a subpackage of one of the listed packages. Subpackages are included automatically (`com.example` also matches `com.example.sub`).
+
+When set, the processor only generates builders for annotated DTOs inside this scope. Because the processor is generating these builders, references to them from other generated builders can be emitted directly without an extra type-existence check.
+
+This option is intended as a project-wide setting, usually configured via the processor's compiler arguments.
+
+#### `builderUsagePackages`
+
+**Default**: `""` (empty) | **Compiler Option**: `-Asimplebuilder.builderUsagePackages=pkg1,pkg2,...`
+
+Allows generated builders in other packages to reference builders from the listed packages. Subpackages are included automatically.
+
+A DTO inside the usage scope but **not** inside the generation scope is only referenced as a builder when the processor can resolve the compiled builder type on the classpath. If the builder type cannot be found, the field falls back to a plain setter.
+
+**Typical use case**: referencing builders from precompiled library DTOs that carry the `@SimpleBuilder` annotation but are processed in a different compilation unit.
+
+**Backward compatibility**: When both options are empty (the default), the processor behaves exactly as before and references any `@SimpleBuilder`-annotated type without a type-existence check.
+
+---
+
 ### Integration & Annotations
 
 #### `generateWithInterface`
@@ -1265,6 +1291,10 @@ methodAccess = AccessModifier.PRIVATE
 # Component Filtering
 -Asimplebuilder.deactivateGenerationComponents=pattern1,pattern2,...
 
+# Builder Scoping
+-Asimplebuilder.builderGenerationPackages=pkg1,pkg2,...
+-Asimplebuilder.builderUsagePackages=pkg1,pkg2,...
+
 # Integration & Annotations
 -Asimplebuilder.generateWithInterface=ENABLED|DISABLED
 -Asimplebuilder.implementsBuilderBase=ENABLED|DISABLED
@@ -1316,6 +1346,10 @@ methodAccess = AccessModifier.PRIVATE
     usingBuilderImplementationAnnotation = OptionState.ENABLED,
     usingJacksonDeserializerAnnotation = OptionState.ENABLED,
     
+    // Builder Scoping (project-wide compiler arguments are recommended)
+    builderGenerationPackages = "",
+    builderUsagePackages = "",
+
     // Naming
     builderSuffix = "Builder",
     setterSuffix = ""

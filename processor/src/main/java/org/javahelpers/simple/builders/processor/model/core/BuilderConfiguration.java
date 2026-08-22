@@ -62,6 +62,10 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  * @param usingBuilderImplementationAnnotation Use BuilderImplementation annotation
  * @param implementsBuilderBase Implement IBuilderBase interface
  * @param generateWithInterface Generate With interface
+ * @param jacksonModulePackage Package name for the Jackson module
+ * @param builderGenerationPackages Comma-separated packages for which builders are generated
+ * @param builderUsagePackages Comma-separated packages whose builders may be referenced by other
+ *     builders
  * @param builderSuffix Suffix for builder class name
  * @param setterSuffix Suffix for setter method names
  * @param strict Strict/fail-fast generation mode
@@ -91,6 +95,8 @@ public record BuilderConfiguration(
     OptionState usingJacksonDeserializerAnnotation,
     OptionState generateJacksonModule,
     String jacksonModulePackage,
+    String builderGenerationPackages,
+    String builderUsagePackages,
     String builderSuffix,
     String setterSuffix,
     OptionState strict) {
@@ -121,6 +127,8 @@ public record BuilderConfiguration(
           .usingJacksonDeserializerAnnotation(DISABLED)
           .generateJacksonModule(DISABLED)
           .jacksonModulePackage(null)
+          .builderGenerationPackages(null)
+          .builderUsagePackages(null)
           .builderSuffix("Builder")
           .setterSuffix("")
           .strict(DISABLED)
@@ -232,6 +240,62 @@ public record BuilderConfiguration(
     return setterSuffix;
   }
 
+  public String getBuilderGenerationPackages() {
+    return builderGenerationPackages;
+  }
+
+  public String getBuilderUsagePackages() {
+    return builderUsagePackages;
+  }
+
+  public java.util.Set<String> getBuilderGenerationPackagesSet() {
+    return parsePackageSet(builderGenerationPackages);
+  }
+
+  public java.util.Set<String> getBuilderUsagePackagesSet() {
+    return parsePackageSet(builderUsagePackages);
+  }
+
+  public boolean isInGenerationScope(String packageName) {
+    java.util.Set<String> packages = getBuilderGenerationPackagesSet();
+    return packages.isEmpty() || matchesPackage(packages, packageName);
+  }
+
+  public boolean isInUsageScope(String packageName) {
+    java.util.Set<String> packages = getBuilderUsagePackagesSet();
+    return packages.isEmpty() || matchesPackage(packages, packageName);
+  }
+
+  public boolean isPackageInGenerationScope(String packageName) {
+    return matchesPackage(getBuilderGenerationPackagesSet(), packageName);
+  }
+
+  public boolean isPackageInUsageScope(String packageName) {
+    return matchesPackage(getBuilderUsagePackagesSet(), packageName);
+  }
+
+  private static boolean matchesPackage(java.util.Set<String> packages, String packageName) {
+    if (packageName == null) {
+      return false;
+    }
+    for (String p : packages) {
+      if (packageName.equals(p) || packageName.startsWith(p + ".")) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static java.util.Set<String> parsePackageSet(String value) {
+    if (StringUtils.isBlank(value)) {
+      return java.util.Collections.emptySet();
+    }
+    return java.util.Arrays.stream(StringUtils.split(value, ","))
+        .map(String::trim)
+        .filter(java.util.function.Predicate.not(String::isEmpty))
+        .collect(java.util.stream.Collectors.toUnmodifiableSet());
+  }
+
   public boolean isStrictModeEnabled() {
     return strict == ENABLED;
   }
@@ -300,6 +364,9 @@ public record BuilderConfiguration(
         .generateJacksonModule(
             mergeOptionState(other.generateJacksonModule, this.generateJacksonModule))
         .jacksonModulePackage(mergeString(other.jacksonModulePackage, this.jacksonModulePackage))
+        .builderGenerationPackages(
+            mergeString(other.builderGenerationPackages, this.builderGenerationPackages))
+        .builderUsagePackages(mergeString(other.builderUsagePackages, this.builderUsagePackages))
         .builderSuffix(mergeString(other.builderSuffix, this.builderSuffix))
         .setterSuffix(mergeString(other.setterSuffix, this.setterSuffix))
         .strict(mergeOptionState(other.strict, this.strict))
@@ -366,6 +433,8 @@ public record BuilderConfiguration(
         .appendValueIfSet("usingJacksonDeserializerAnnotation", usingJacksonDeserializerAnnotation)
         .appendValueIfSet("generateJacksonModule", generateJacksonModule)
         .appendIfNotEmpty("jacksonModulePackage", jacksonModulePackage)
+        .appendIfNotEmpty("builderGenerationPackages", builderGenerationPackages)
+        .appendIfNotEmpty("builderUsagePackages", builderUsagePackages)
         .appendIfNotEmpty("builderSuffix", builderSuffix)
         .appendIfNotEmpty("setterSuffix", setterSuffix)
         .appendValueIfSet("strict", strict)
@@ -446,6 +515,8 @@ public record BuilderConfiguration(
     private String jacksonModulePackage = null;
 
     // === Naming ===
+    private String builderGenerationPackages = null;
+    private String builderUsagePackages = null;
     private String builderSuffix = null;
     private String setterSuffix = null;
 
@@ -525,6 +596,16 @@ public record BuilderConfiguration(
 
     public Builder jacksonModulePackage(String value) {
       this.jacksonModulePackage = StringUtils.trimToNull(value);
+      return this;
+    }
+
+    public Builder builderGenerationPackages(String value) {
+      this.builderGenerationPackages = StringUtils.trimToNull(value);
+      return this;
+    }
+
+    public Builder builderUsagePackages(String value) {
+      this.builderUsagePackages = StringUtils.trimToNull(value);
       return this;
     }
 
@@ -734,6 +815,8 @@ public record BuilderConfiguration(
           usingJacksonDeserializerAnnotation,
           generateJacksonModule,
           jacksonModulePackage,
+          builderGenerationPackages,
+          builderUsagePackages,
           builderSuffix,
           setterSuffix,
           strict);

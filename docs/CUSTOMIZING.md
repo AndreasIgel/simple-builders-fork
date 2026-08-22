@@ -296,6 +296,7 @@ compileJava {
 - **Unified Registry** - A single `GeneratorRegistry` loads all generators from one service file
 - **Type-Based Separation** - The registry automatically separates generators by type using `instanceof`
 - **Single Service File** - All generators (both method and builder) are registered in one place
+- **Builder Scope Resolution** - The decision whether a DTO type may be referenced as a builder is centralized in `BuilderScopeResolver`. Custom generators and enhancers should continue to rely on `TypeName.getBuilderType().isPresent()` instead of reimplementing the scoping rules.
 
 ### Priority Management
 
