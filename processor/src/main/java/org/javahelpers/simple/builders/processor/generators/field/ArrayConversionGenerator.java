@@ -37,6 +37,7 @@ import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
+import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /**
@@ -50,8 +51,8 @@ import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
  * assigned to the field. This allows using List operations and utilities before converting to the
  * required array type.
  *
- * <p><b>Requirements:</b> Only applies to array fields (e.g., {@code String[]}, {@code Integer[]}).
- * Does not apply to primitive arrays like {@code int[]} or {@code boolean[]}.
+ * <p><b>Requirements:</b> Only applies to array fields (e.g., {@code String[]}, {@code Integer[]},
+ * {@code int[]}, {@code boolean[]}).
  *
  * <p>This generator cannot be deactivated as it provides essential convenience for array fields.
  *
@@ -119,11 +120,24 @@ public class ArrayConversionGenerator implements MethodGenerator {
 
     BuilderMethodDto methodDto = createBuilderMethod(fieldName, builderType, context);
     methodDto.addParameter(parameter);
-    methodDto.setCode(
-        """
-        this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParams:N.toArray(new $elementType:T[0]));
-        return this;
-        """);
+    if (elementType instanceof TypeNamePrimitive) {
+      methodDto.setCode(
+          """
+          var $fieldName:N__list = $dtoMethodParams:N;
+          $elementType:T[] $fieldName:N__array = new $elementType:T[$fieldName:N__list.size()];
+          for (int $fieldName:N__i = 0; $fieldName:N__i < $fieldName:N__array.length; $fieldName:N__i++) {
+            $fieldName:N__array[$fieldName:N__i] = $fieldName:N__list.get($fieldName:N__i);
+          }
+          this.$fieldName:N = $builderFieldWrapper:T.changedValue($fieldName:N__array);
+          return this;
+          """);
+    } else {
+      methodDto.setCode(
+          """
+          this.$fieldName:N = $builderFieldWrapper:T.changedValue($dtoMethodParams:N.toArray(new $elementType:T[0]));
+          return this;
+          """);
+    }
     methodDto.addArgument("fieldName", fieldNameInBuilder);
     methodDto.addArgument("dtoMethodParams", fieldName);
     methodDto.addArgument("builderFieldWrapper", TRACKED_VALUE_TYPE);

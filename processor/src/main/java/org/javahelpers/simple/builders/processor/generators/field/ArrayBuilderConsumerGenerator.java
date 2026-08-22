@@ -38,6 +38,7 @@ import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
+import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /**
@@ -52,8 +53,8 @@ import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
  * converted to an array. This allows fluent array construction with the convenience of list
  * operations.
  *
- * <p><b>Requirements:</b> Only applies to array fields (e.g., {@code String[]}, {@code Integer[]}).
- * Does not apply to primitive arrays like {@code int[]} or {@code boolean[]}.
+ * <p><b>Requirements:</b> Only applies to array fields (e.g., {@code String[]}, {@code Integer[]},
+ * {@code int[]}, {@code boolean[]}).
  *
  * <p>This generator can be deactivated by setting the configuration flag {@code
  * shouldGenerateBuilderConsumer()} to {@code false}. See the configuration documentation for
@@ -131,15 +132,39 @@ public class ArrayBuilderConsumerGenerator implements MethodGenerator {
 
     BuilderMethodDto methodDto = createBuilderMethod(fieldName, returnBuilderType, context);
     methodDto.addParameter(parameter);
-    methodDto.setCode(
-        """
-        $helperType:T builder = this.$fieldName:N.isSet()
-          ? new $helperType:T(java.util.List.of(this.$fieldName:N.value()))
-          : new $helperType:T();
-        $dtoMethodParam:N.accept(builder);
-        this.$fieldName:N = $builderFieldWrapper:T.changedValue(builder.build().toArray(new $elementType:T[0]));
-        return this;
-        """);
+    if (elementType instanceof TypeNamePrimitive) {
+      methodDto.setCode(
+          """
+          $helperType:T builder;
+          if (this.$fieldName:N.isSet()) {
+            java.util.List<$elementType:B> $fieldName:N__existing = new java.util.ArrayList<>($fieldName:N.value().length);
+            for (int $fieldName:N__i = 0; $fieldName:N__i < $fieldName:N.value().length; $fieldName:N__i++) {
+              $fieldName:N__existing.add($fieldName:N.value()[$fieldName:N__i]);
+            }
+            builder = new $helperType:T($fieldName:N__existing);
+          } else {
+            builder = new $helperType:T();
+          }
+          $dtoMethodParam:N.accept(builder);
+          var $fieldName:N__list = builder.build();
+          $elementType:T[] $fieldName:N__array = new $elementType:T[$fieldName:N__list.size()];
+          for (int $fieldName:N__i = 0; $fieldName:N__i < $fieldName:N__array.length; $fieldName:N__i++) {
+            $fieldName:N__array[$fieldName:N__i] = $fieldName:N__list.get($fieldName:N__i);
+          }
+          this.$fieldName:N = $builderFieldWrapper:T.changedValue($fieldName:N__array);
+          return this;
+          """);
+    } else {
+      methodDto.setCode(
+          """
+          $helperType:T builder = this.$fieldName:N.isSet()
+            ? new $helperType:T(java.util.List.of(this.$fieldName:N.value()))
+            : new $helperType:T();
+          $dtoMethodParam:N.accept(builder);
+          this.$fieldName:N = $builderFieldWrapper:T.changedValue(builder.build().toArray(new $elementType:T[0]));
+          return this;
+          """);
+    }
 
     // Add code block import for java.util.List.of
     methodDto.getMethodCodeDto().addCodeBlockImport(List.class);

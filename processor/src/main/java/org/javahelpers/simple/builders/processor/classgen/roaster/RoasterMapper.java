@@ -166,6 +166,9 @@ public final class RoasterMapper {
   /**
    * Resolves the JavaPoet-style named template used in CodeTemplateDto to plain Java source code.
    *
+   * <p>Type placeholders support {@code $label:T} for the plain type and {@code $label:B} for its
+   * boxed representation.
+   *
    * @param codeDto code template DTO
    * @return resolved Java source code
    */
@@ -179,6 +182,7 @@ public final class RoasterMapper {
         code = code.replace("$" + label + ":S", quote(stringPlaceholder.getValue()));
       } else if (placeHolderValue instanceof MethodCodeTypePlaceholder typePlaceholder) {
         code = code.replace("$" + label + ":T", mapType(typePlaceholder.getValue()));
+        code = code.replace("$" + label + ":B", mapBoxedType(typePlaceholder.getValue()));
       } else {
         throw new RoasterMapperException(
             "Unsupported placeholder type: %s", placeHolderValue.getClass().getName());
