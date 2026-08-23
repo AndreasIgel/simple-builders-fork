@@ -5,6 +5,7 @@ import static org.javahelpers.simple.builders.core.util.TrackedValue.initialValu
 import static org.javahelpers.simple.builders.core.util.TrackedValue.unsetValue;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -438,9 +439,12 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * @return current instance of builder
    */
   public PersonDtoBuilder nickNames2(Consumer<ArrayListBuilder<String>> nickNames2BuilderConsumer) {
-    ArrayListBuilder<String> builder = this.nickNames2.isSet()
-        ? new ArrayListBuilder<String>(java.util.List.of(this.nickNames2.value()))
-        : new ArrayListBuilder<String>();
+    ArrayListBuilder<String> builder;
+    if (this.nickNames2.isSet()) {
+      builder = new ArrayListBuilder<String>(Arrays.asList(this.nickNames2.value()));
+    } else {
+      builder = new ArrayListBuilder<String>(Arrays.asList());
+    }
     nickNames2BuilderConsumer.accept(builder);
     this.nickNames2 = changedValue(builder.build().toArray(new String[0]));
     return this;

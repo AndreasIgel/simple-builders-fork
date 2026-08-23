@@ -141,7 +141,8 @@ public class BuilderToGenerationTypeMapper {
     classMethod.getParameters().forEach(method::addParameter);
     classMethod.getGenericParameters().forEach(method::addGenericParameter);
 
-    // Copy method code: set code format and copy all arguments
+    // Copy method code: set code format, copy all arguments, and preserve explicit code-block
+    // imports
     if (classMethod.hasCode()) {
       method.setCode(classMethod.getMethodCodeDto().getCodeFormat());
       for (MethodCodePlaceholder<?> argument : classMethod.getMethodCodeDto().getCodeArguments()) {
@@ -151,6 +152,10 @@ public class BuilderToGenerationTypeMapper {
           method.addArgument(typePlaceholder.getLabel(), typePlaceholder.getValue());
         }
       }
+      method
+          .getMethodCodeDto()
+          .getCodeBlockImports()
+          .addAll(classMethod.getMethodCodeDto().getCodeBlockImports());
     }
 
     return method;

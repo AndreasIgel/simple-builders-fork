@@ -435,6 +435,107 @@ class CustomCollectionTypeTest {
   }
 
   @Test
+  void primitiveArrayFields_shouldGenerateCompilableCollectionHelpers() {
+    JavaFileObject primitiveArrayDto =
+        ProcessorTestUtils.simpleBuilderClass(
+            "test",
+            "PrimitiveArrayDto",
+            """
+                private final int[] scores;
+                private final boolean[] flags;
+                private final double[] values;
+
+                public PrimitiveArrayDto(int[] scores, boolean[] flags, double[] values) {
+                  this.scores = scores;
+                  this.flags = flags;
+                  this.values = values;
+                }
+
+                public int[] getScores() { return scores; }
+                public boolean[] getFlags() { return flags; }
+                public double[] getValues() { return values; }
+            """);
+
+    Compilation compilation = compile(primitiveArrayDto);
+    String generatedCode =
+        ProcessorTestUtils.loadGeneratedSource(compilation, "PrimitiveArrayDtoBuilder");
+    assertGenerationSucceeded(compilation, "PrimitiveArrayDtoBuilder", generatedCode);
+
+    ProcessorAsserts.assertingResult(
+        generatedCode,
+        contains(
+            """
+            public PrimitiveArrayDtoBuilder scores(List<Integer> scores) {
+              this.scores = changedValue(ArrayUtils.toPrimitive(scores.toArray(new Integer[0])));
+              return this;
+            }
+            """),
+        contains(
+            """
+            public PrimitiveArrayDtoBuilder scores(Consumer<ArrayListBuilder<Integer>> scoresBuilderConsumer) {
+              ArrayListBuilder<Integer> builder;
+              if (this.scores.isSet()) {
+                builder = new ArrayListBuilder<Integer>(Arrays.asList(ArrayUtils.toObject(this.scores.value())));
+              } else {
+                builder = new ArrayListBuilder<Integer>(Arrays.asList());
+              }
+              scoresBuilderConsumer.accept(builder);
+              this.scores = changedValue(ArrayUtils.toPrimitive(builder.build().toArray(new Integer[0])));
+              return this;
+            }
+            """),
+        contains(
+            """
+            public PrimitiveArrayDtoBuilder flags(List<Boolean> flags) {
+              this.flags = changedValue(ArrayUtils.toPrimitive(flags.toArray(new Boolean[0])));
+              return this;
+            }
+            """),
+        contains(
+            """
+            public PrimitiveArrayDtoBuilder flags(Consumer<ArrayListBuilder<Boolean>> flagsBuilderConsumer) {
+              ArrayListBuilder<Boolean> builder;
+              if (this.flags.isSet()) {
+                builder = new ArrayListBuilder<Boolean>(Arrays.asList(ArrayUtils.toObject(this.flags.value())));
+              } else {
+                builder = new ArrayListBuilder<Boolean>(Arrays.asList());
+              }
+              flagsBuilderConsumer.accept(builder);
+              this.flags = changedValue(ArrayUtils.toPrimitive(builder.build().toArray(new Boolean[0])));
+              return this;
+            }
+            """),
+        contains(
+            """
+            public PrimitiveArrayDtoBuilder values(List<Double> values) {
+              this.values = changedValue(ArrayUtils.toPrimitive(values.toArray(new Double[0])));
+              return this;
+            }
+            """),
+        contains(
+            """
+            public PrimitiveArrayDtoBuilder values(Consumer<ArrayListBuilder<Double>> valuesBuilderConsumer) {
+              ArrayListBuilder<Double> builder;
+              if (this.values.isSet()) {
+                builder = new ArrayListBuilder<Double>(Arrays.asList(ArrayUtils.toObject(this.values.value())));
+              } else {
+                builder = new ArrayListBuilder<Double>(Arrays.asList());
+              }
+              valuesBuilderConsumer.accept(builder);
+              this.values = changedValue(ArrayUtils.toPrimitive(builder.build().toArray(new Double[0])));
+              return this;
+            }
+            """),
+        contains(
+            """
+            public PrimitiveArrayDto build() {
+              PrimitiveArrayDto result = new PrimitiveArrayDto(this.scores.value(), this.flags.value(), this.values.value());
+              return result;
+            }
+            """));
+  }
+
+  @Test
   void unmodifiableListInConstructor_shouldHandleCorrectly() {
     // DTO that creates unmodifiable list in constructor - builder should handle this safely
     // The DTO internally uses List.copyOf() which creates an unmodifiable list
