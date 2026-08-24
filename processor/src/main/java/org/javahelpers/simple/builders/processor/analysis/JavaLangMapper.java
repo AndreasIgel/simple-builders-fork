@@ -44,7 +44,6 @@ import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.SimpleTypeVisitor14;
-import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto;
@@ -216,22 +215,10 @@ public final class JavaLangMapper {
    */
   private static void setBuilderTypeIfAnnotated(
       TypeName typeName, TypeElement typeElement, ProcessingContext context) {
-    // Types explicitly opted out must never be referenced as builders by other DTOs.
-    if (JavaLangAnalyser.findAnnotation(typeElement, Ignore4BuilderGeneration.class).isPresent()) {
-      return;
-    }
-
-    Optional<javax.lang.model.element.AnnotationMirror> foundBuilderAnnotation =
-        JavaLangAnalyser.findAnnotation(
-            typeElement, org.javahelpers.simple.builders.core.annotations.SimpleBuilder.class);
-
-    // Type element must have @SimpleBuilder annotation
-    if (foundBuilderAnnotation.isEmpty()) {
-      return;
-    }
-
-    TypeName builderType = createBuilderTypeName(typeElement, context);
-    typeName.setBuilderType(builderType);
+    context
+        .getBuilderScopeResolver()
+        .resolveUsableBuilderType(typeElement, context)
+        .ifPresent(typeName::setBuilderType);
   }
 
   /**
@@ -277,20 +264,11 @@ public final class JavaLangMapper {
       return;
     }
 
-    // Opted-out element types must never be referenced as element builders.
-    if (JavaLangAnalyser.findAnnotation(elementTypeElement, Ignore4BuilderGeneration.class)
-        .isPresent()) {
-      return;
-    }
-
-    // Element type must have @SimpleBuilder annotation
-    if (!hasSimpleBuilderAnnotation(elementTypeElement)) {
-      return;
-    }
-
-    // Set the element builder type
-    TypeName elementBuilderType = createBuilderTypeName(elementTypeElement, context);
-    genericType.setElementBuilderType(elementBuilderType);
+    // Resolve usable element builder type through the scope resolver
+    context
+        .getBuilderScopeResolver()
+        .resolveUsableBuilderType(elementTypeElement, context)
+        .ifPresent(genericType::setElementBuilderType);
   }
 
   /**
@@ -307,27 +285,13 @@ public final class JavaLangMapper {
   }
 
   /**
-   * Checks if a TypeElement has the @SimpleBuilder annotation.
-   *
-   * @param typeElement the type element to check
-   * @return true if the element has @SimpleBuilder annotation
-   */
-  private static boolean hasSimpleBuilderAnnotation(TypeElement typeElement) {
-    Optional<javax.lang.model.element.AnnotationMirror> annotation =
-        JavaLangAnalyser.findAnnotation(
-            typeElement, org.javahelpers.simple.builders.core.annotations.SimpleBuilder.class);
-    return annotation.isPresent();
-  }
-
-  /**
    * Creates a TypeName for the builder of a given TypeElement.
    *
    * @param typeElement the type element to create builder name for
    * @param context the processing context
    * @return the TypeName for the builder
    */
-  private static TypeName createBuilderTypeName(
-      TypeElement typeElement, ProcessingContext context) {
+  static TypeName createBuilderTypeName(TypeElement typeElement, ProcessingContext context) {
     String builderClassName =
         typeElement.getSimpleName().toString() + context.getConfiguration().getBuilderSuffix();
     String packageName = extractPackageName(typeElement.getQualifiedName().toString());
@@ -340,7 +304,7 @@ public final class JavaLangMapper {
    * @param qualifiedName the fully qualified class name (e.g., "com.example.MyClass")
    * @return the package name (e.g., "com.example"), or empty string if no package
    */
-  private static String extractPackageName(String qualifiedName) {
+  static String extractPackageName(String qualifiedName) {
     int lastDot = qualifiedName.lastIndexOf('.');
     return lastDot > 0 ? qualifiedName.substring(0, lastDot) : "";
   }

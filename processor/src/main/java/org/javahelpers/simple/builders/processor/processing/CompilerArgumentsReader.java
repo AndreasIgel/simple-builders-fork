@@ -192,6 +192,8 @@ public class CompilerArgumentsReader {
         .generateJacksonModule(readOptionState(CompilerArgumentsEnum.GENERATE_JACKSON_MODULE))
         .generateJavaDoc(readOptionState(CompilerArgumentsEnum.GENERATE_JAVADOC))
         .jacksonModulePackage(readValue(CompilerArgumentsEnum.JACKSON_MODULE_PACKAGE))
+        .builderGenerationPackages(readValue(CompilerArgumentsEnum.BUILDER_GENERATION_PACKAGES))
+        .builderUsagePackages(readValue(CompilerArgumentsEnum.BUILDER_USAGE_PACKAGES))
         .builderSuffix(readValue(CompilerArgumentsEnum.BUILDER_SUFFIX))
         .setterSuffix(readValue(CompilerArgumentsEnum.SETTER_SUFFIX))
         .formattingMode(readValue(CompilerArgumentsEnum.FORMATTING_MODE))

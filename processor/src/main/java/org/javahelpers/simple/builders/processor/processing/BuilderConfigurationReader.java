@@ -334,6 +334,8 @@ public class BuilderConfigurationReader {
             builder.generateJacksonModule(OptionState.valueOf(enumValue));
         case "generateJavaDoc" -> builder.generateJavaDoc(OptionState.valueOf(enumValue));
         case "jacksonModulePackage" -> builder.jacksonModulePackage(value.toString());
+        case "builderGenerationPackages" -> builder.builderGenerationPackages(value.toString());
+        case "builderUsagePackages" -> builder.builderUsagePackages(value.toString());
         case "builderSuffix" -> builder.builderSuffix(value.toString());
         case "setterSuffix" -> builder.setterSuffix(value.toString());
         case "formattingMode" -> builder.formattingMode(value.toString());

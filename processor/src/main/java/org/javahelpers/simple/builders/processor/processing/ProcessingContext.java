@@ -32,6 +32,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import org.javahelpers.simple.builders.processor.analysis.BuilderScopeResolver;
 import org.javahelpers.simple.builders.processor.generators.registry.GeneratorRegistry;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -54,6 +55,7 @@ public final class ProcessingContext {
   private final ProcessingEnvironment processingEnv;
   private final PerformanceTracker performanceTracker;
   private GeneratorRegistry generatorRegistry;
+  private BuilderScopeResolver builderScopeResolver;
   private BuilderConfiguration configurationForProcessingTarget;
 
   /**
@@ -92,6 +94,7 @@ public final class ProcessingContext {
    */
   public void initConfigurationForProcessingTarget(BuilderConfiguration config) {
     this.configurationForProcessingTarget = config;
+    this.builderScopeResolver = null;
   }
 
   /**
@@ -139,6 +142,21 @@ public final class ProcessingContext {
   public PerformanceTracker getPerformanceTracker() {
     return performanceTracker;
   }
+
+  /**
+   * Get the builder scope resolver for deciding whether a builder may be referenced.
+   *
+   * <p>The resolver is keyed off the current target configuration and is recomputed when the
+   * target configuration changes.
+   *
+   * @return the builder scope resolver
+   */
+   public BuilderScopeResolver getBuilderScopeResolver() {
+    if (builderScopeResolver == null) {
+      builderScopeResolver = new BuilderScopeResolver(this);
+    }
+    return builderScopeResolver;
+   }
 
   /**
    * Get the TypeElement for a given qualified class name.

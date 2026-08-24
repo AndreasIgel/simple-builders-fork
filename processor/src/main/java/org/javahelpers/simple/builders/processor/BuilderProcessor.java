@@ -201,6 +201,18 @@ public class BuilderProcessor extends AbstractProcessor {
         BuilderConfiguration config = reader.resolveConfiguration(annotatedElement);
         tracker.endPhase(PHASE_CONFIGURATION_RESOLUTION);
         context.debug("Configuration resolved: %s", config);
+
+        // Restrict builder generation to configured scopes, if any
+        if (!config.getBuilderGenerationPackagesSet().isEmpty()) {
+          String packageName = context.getPackageName(annotatedElement);
+          if (!config.isInGenerationScope(packageName)) {
+            context.debug(
+                "Skipping %s: package '%s' is not in builderGenerationPackages",
+                annotatedElement.getSimpleName(), packageName);
+            continue;
+          }
+        }
+
         process(annotatedElement, config);
         successfulGenerations++;
       } catch (BuilderException ex) {

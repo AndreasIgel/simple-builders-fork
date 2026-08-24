@@ -679,6 +679,41 @@ public @interface SimpleBuilder {
      */
     OptionState generateJavaDoc() default OptionState.UNSET;
 
+    // === Builder Scoping ===
+    /**
+     * Comma-separated list of packages for which builders are generated. <br>
+     * Subpackages are included automatically. When non-empty, builder generation is restricted to
+     * DTOs whose package equals or is a subpackage of a listed package. Types in this scope are
+     * trusted to have their builder generated in the same compilation and may be referenced without
+     * a type-existence search.
+     *
+     * <p>Example: {@code "com.example.dto, com.example.shared"}
+     *
+     * <p>Default: "" (empty - builders are generated for all {@code @SimpleBuilder} annotated
+     * DTOs, no type search) <br>
+     * Compiler option: -Asimplebuilder.builderGenerationPackages
+     *
+     * @return the packages for which builders are generated
+     */
+    String builderGenerationPackages() default "";
+
+    /**
+     * Comma-separated list of packages whose builders may be used as helper methods for other
+     * DTOs. <br>
+     * Subpackages are included automatically. A type in this scope but not in
+     * {@link #builderGenerationPackages()} must have its compiled builder verified (via type
+     * search) before a builder reference is emitted. If the builder type cannot be resolved, the
+     * field falls back to a plain setter.
+     *
+     * <p>Example: {@code "com.example.library, com.example.external"}
+     *
+     * <p>Default: "" (empty - all annotated types may be referenced without type search) <br>
+     * Compiler option: -Asimplebuilder.builderUsagePackages
+     *
+     * @return the packages whose builders may be used as helpers
+     */
+    String builderUsagePackages() default "";
+
     // === Naming ===
     /**
      * Suffix to append to the DTO name to generate the builder class name. <br>
