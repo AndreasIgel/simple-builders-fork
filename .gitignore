@@ -119,3 +119,8 @@ fabric.properties
 .idea/
 *~
 *.zip
+
+# Generated performance test sources, builder output, and measurement results
+performance-test/src/main/java/org/javahelpers/simple/builders/performance_test/
+performance-test/generated-performance-builder/
+performance-test/performance-reports/

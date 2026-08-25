@@ -31,6 +31,7 @@ A zero-reflection Java annotation processor that generates fluent, type-safe bui
   - [Elementary Builder Example](#elementary-builder-example)
   - [Full-Featured Examples](#full-featured-examples)
   - [Advanced Features](#advanced-features)
+- [Performance Measurement](#performance-measurement)
 - [Contributing](#contributing)
 - [License](#license)
 - [Acknowledgements](#acknowledgements)
@@ -463,6 +464,12 @@ Examples demonstrating special annotations and nested object relationships:
 - **Default Values**: [`ProductWithDefaults.java`](example/src/main/java/org/javahelpers/simple/builders/example/ProductWithDefaults.java) (record) and [`OrderWithDefaults.java`](example/src/main/java/org/javahelpers/simple/builders/example/OrderWithDefaults.java) (class) - Demonstrate `@Default` annotation for unset builder fields
 
 These examples serve as both documentation and integration tests for the annotation processor.
+
+## Performance Measurement
+
+The `performance-test` module measures annotation processing performance across different builder frameworks (Simple Builders, MinimalBuilder, RecordBuilder, and Lombok). It generates ~1000 DTO classes from a JSON catalog, compiles them repeatedly, and aggregates timing results.
+
+For the full guide — including quick-start, builder type shortcuts, Maven profiles, and wall-time-only mode for external processors — see [Performance Analysis Guide](performance-test/docs/PERFORMANCE_ANALYSIS.md).
 
 ## Contributing
 

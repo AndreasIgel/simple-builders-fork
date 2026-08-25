@@ -35,6 +35,10 @@ import javax.lang.model.util.Types;
 import org.javahelpers.simple.builders.processor.generators.registry.GeneratorRegistry;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.processing.logging.ActivePerformanceTracker;
+import org.javahelpers.simple.builders.processor.processing.logging.NoOpPerformanceTracker;
+import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
+import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 
 /**
  * Context object that wraps Elements, Types, and logging utilities from annotation processing,
@@ -48,6 +52,7 @@ public final class ProcessingContext {
   private final ProcessingLogger logger;
   private final BuilderConfigurationReader configurationReader;
   private final ProcessingEnvironment processingEnv;
+  private final PerformanceTracker performanceTracker;
   private GeneratorRegistry generatorRegistry;
   private BuilderConfiguration configurationForProcessingTarget;
 
@@ -68,6 +73,15 @@ public final class ProcessingContext {
     this.processingEnv = processingEnv;
     this.configurationReader =
         new BuilderConfigurationReader(globalConfiguration, logger, elementUtils);
+    // Initialize performance tracker based on compiler argument
+    CompilerArgumentsReader argReader = new CompilerArgumentsReader(processingEnv);
+    boolean perfTrackingEnabled =
+        argReader.readBooleanValue(CompilerArgumentsEnum.PERFORMANCE_TRACKING);
+    String perfOutputFile = argReader.readValue(CompilerArgumentsEnum.PERFORMANCE_OUTPUT_FILE);
+    this.performanceTracker =
+        perfTrackingEnabled
+            ? new ActivePerformanceTracker(perfOutputFile)
+            : new NoOpPerformanceTracker();
     // GeneratorRegistry will be lazily initialized on first access
   }
 
@@ -111,6 +125,19 @@ public final class ProcessingContext {
       generatorRegistry = new GeneratorRegistry(this, processingEnv);
     }
     return generatorRegistry;
+  }
+
+  /**
+   * Gets the performance tracker for this processing context.
+   *
+   * <p>When performance tracking is disabled, returns a {@link NoOpPerformanceTracker} that has
+   * zero overhead. When enabled via {@code -Asimplebuilder.performanceTracking=true}, returns an
+   * {@link ActivePerformanceTracker} that measures execution times.
+   *
+   * @return the performance tracker instance
+   */
+  public PerformanceTracker getPerformanceTracker() {
+    return performanceTracker;
   }
 
   /**
