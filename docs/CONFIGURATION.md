@@ -19,6 +19,7 @@ Simple-builders supports fine-grained configuration through the `@SimpleBuilder.
   - [Collection Helpers](#collection-helpers)
   - [Component Filtering](#component-filtering)
   - [Integration](#integration)
+  - [Documentation](#documentation)
   - [Reliability](#reliability)
   - [Performance Tracking](#performance-tracking)
 - [Examples](#examples)
@@ -112,7 +113,8 @@ Create reusable configuration presets with custom template annotations. The buil
     usingBuilderImplementationAnnotation = OptionState.DISABLED,
     implementsBuilderBase = OptionState.DISABLED,
     usingJacksonDeserializerAnnotation = OptionState.DISABLED,
-    generateJacksonModule = OptionState.DISABLED
+    generateJacksonModule = OptionState.DISABLED,
+    generateJavaDoc = OptionState.DISABLED
 ))
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
@@ -858,6 +860,30 @@ This is highly recommended to ensure deterministic output location and avoid spl
 
 ---
 
+### Documentation
+
+#### `generateJavaDoc`
+
+**Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.generateJavaDoc=ENABLED|DISABLED`
+
+Controls whether the processor emits Javadoc comments on the generated builder class, its fields, constructors and methods.
+
+**When ENABLED** (default):
+The generated builder contains Javadoc blocks explaining the purpose of the class, setters, `build()`, `create()` and any helper methods.
+
+**When DISABLED**:
+No Javadoc is emitted. This produces smaller generated source files and is useful when generated code is committed to version control and Javadoc noise is undesirable.
+
+**Example**:
+```java
+@SimpleBuilder(options = @SimpleBuilder.Options(generateJavaDoc = OptionState.DISABLED))
+public class PersonDto {
+    private String name;
+}
+```
+
+---
+
 ### Naming
 
 #### `builderSuffix`
@@ -1069,7 +1095,8 @@ The built-in `@SimpleMinimalBuilder` is the simplest way to get a lightweight bu
     usingBuilderImplementationAnnotation = OptionState.DISABLED,
     implementsBuilderBase = OptionState.DISABLED,
     usingJacksonDeserializerAnnotation = OptionState.DISABLED,
-    generateJacksonModule = OptionState.DISABLED
+    generateJacksonModule = OptionState.DISABLED,
+    generateJavaDoc = OptionState.DISABLED
 ))
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
@@ -1337,6 +1364,9 @@ methodAccess = AccessModifier.PRIVATE
 -Asimplebuilder.usingGeneratedAnnotation=ENABLED|DISABLED
 -Asimplebuilder.usingBuilderImplementationAnnotation=ENABLED|DISABLED
 
+# Documentation
+-Asimplebuilder.generateJavaDoc=ENABLED|DISABLED
+
 # Naming
 -Asimplebuilder.builderSuffix=CustomSuffix
 -Asimplebuilder.setterSuffix=customPrefix
@@ -1385,7 +1415,10 @@ methodAccess = AccessModifier.PRIVATE
     usingGeneratedAnnotation = OptionState.ENABLED,
     usingBuilderImplementationAnnotation = OptionState.ENABLED,
     usingJacksonDeserializerAnnotation = OptionState.ENABLED,
-    
+
+    // Documentation
+    generateJavaDoc = OptionState.ENABLED,
+
     // Naming
     builderSuffix = "Builder",
     setterSuffix = ""

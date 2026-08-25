@@ -90,6 +90,7 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
             usingBuilderImplementationAnnotation = OptionState.DISABLED,
             usingJacksonDeserializerAnnotation = OptionState.DISABLED,
             generateJacksonModule = OptionState.DISABLED,
+            generateJavaDoc = OptionState.DISABLED,
             copyTypeAnnotations = OptionState.DISABLED,
             implementsBuilderBase = OptionState.DISABLED,
             builderSuffix = "Builder",

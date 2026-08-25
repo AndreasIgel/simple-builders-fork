@@ -62,6 +62,7 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  * @param usingBuilderImplementationAnnotation Use BuilderImplementation annotation
  * @param implementsBuilderBase Implement IBuilderBase interface
  * @param generateWithInterface Generate With interface
+ * @param generateJavaDoc Generate Javadoc comments
  * @param builderSuffix Suffix for builder class name
  * @param setterSuffix Suffix for setter method names
  * @param strict Strict/fail-fast generation mode
@@ -90,6 +91,7 @@ public record BuilderConfiguration(
     OptionState generateWithInterface,
     OptionState usingJacksonDeserializerAnnotation,
     OptionState generateJacksonModule,
+    OptionState generateJavaDoc,
     String jacksonModulePackage,
     String builderSuffix,
     String setterSuffix,
@@ -120,6 +122,7 @@ public record BuilderConfiguration(
           .generateWithInterface(ENABLED)
           .usingJacksonDeserializerAnnotation(DISABLED)
           .generateJacksonModule(DISABLED)
+          .generateJavaDoc(ENABLED)
           .jacksonModulePackage(null)
           .builderSuffix("Builder")
           .setterSuffix("")
@@ -153,6 +156,10 @@ public record BuilderConfiguration(
 
   public boolean shouldGenerateJacksonModule() {
     return generateJacksonModule == ENABLED;
+  }
+
+  public boolean shouldGenerateJavaDoc() {
+    return generateJavaDoc == ENABLED;
   }
 
   public boolean shouldGenerateVarArgsHelpers() {
@@ -299,6 +306,7 @@ public record BuilderConfiguration(
                 other.usingJacksonDeserializerAnnotation, this.usingJacksonDeserializerAnnotation))
         .generateJacksonModule(
             mergeOptionState(other.generateJacksonModule, this.generateJacksonModule))
+        .generateJavaDoc(mergeOptionState(other.generateJavaDoc, this.generateJavaDoc))
         .jacksonModulePackage(mergeString(other.jacksonModulePackage, this.jacksonModulePackage))
         .builderSuffix(mergeString(other.builderSuffix, this.builderSuffix))
         .setterSuffix(mergeString(other.setterSuffix, this.setterSuffix))
@@ -365,6 +373,7 @@ public record BuilderConfiguration(
         .appendValueIfSet("generateWithInterface", generateWithInterface)
         .appendValueIfSet("usingJacksonDeserializerAnnotation", usingJacksonDeserializerAnnotation)
         .appendValueIfSet("generateJacksonModule", generateJacksonModule)
+        .appendValueIfSet("generateJavaDoc", generateJavaDoc)
         .appendIfNotEmpty("jacksonModulePackage", jacksonModulePackage)
         .appendIfNotEmpty("builderSuffix", builderSuffix)
         .appendIfNotEmpty("setterSuffix", setterSuffix)
@@ -443,6 +452,7 @@ public record BuilderConfiguration(
     private OptionState generateWithInterface = OptionState.UNSET;
     private OptionState usingJacksonDeserializerAnnotation = OptionState.UNSET;
     private OptionState generateJacksonModule = OptionState.UNSET;
+    private OptionState generateJavaDoc = OptionState.UNSET;
     private String jacksonModulePackage = null;
 
     // === Naming ===
@@ -520,6 +530,16 @@ public record BuilderConfiguration(
 
     public Builder generateJacksonModule(boolean value) {
       this.generateJacksonModule = value ? ENABLED : DISABLED;
+      return this;
+    }
+
+    public Builder generateJavaDoc(OptionState value) {
+      this.generateJavaDoc = value;
+      return this;
+    }
+
+    public Builder generateJavaDoc(boolean value) {
+      this.generateJavaDoc = value ? ENABLED : DISABLED;
       return this;
     }
 
@@ -733,6 +753,7 @@ public record BuilderConfiguration(
           generateWithInterface,
           usingJacksonDeserializerAnnotation,
           generateJacksonModule,
+          generateJavaDoc,
           jacksonModulePackage,
           builderSuffix,
           setterSuffix,

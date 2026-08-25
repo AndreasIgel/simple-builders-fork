@@ -171,6 +171,7 @@ public class CompilerArgumentsReader {
         .usingJacksonDeserializerAnnotation(
             readOptionState(CompilerArgumentsEnum.USING_JACKSON_DESERIALIZER_ANNOTATION))
         .generateJacksonModule(readOptionState(CompilerArgumentsEnum.GENERATE_JACKSON_MODULE))
+        .generateJavaDoc(readOptionState(CompilerArgumentsEnum.GENERATE_JAVADOC))
         .jacksonModulePackage(readValue(CompilerArgumentsEnum.JACKSON_MODULE_PACKAGE))
         .builderSuffix(readValue(CompilerArgumentsEnum.BUILDER_SUFFIX))
         .setterSuffix(readValue(CompilerArgumentsEnum.SETTER_SUFFIX))

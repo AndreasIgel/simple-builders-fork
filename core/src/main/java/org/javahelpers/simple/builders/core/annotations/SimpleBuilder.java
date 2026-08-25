@@ -61,6 +61,7 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  *       usingArrayListBuilderWithElementBuilders, usingHashSetBuilder,
  *       usingHashSetBuilderWithElementBuilders, usingHashMapBuilder (all default: true)
  *   <li><b>Integration:</b> generateWithInterface (default: true)
+ *   <li><b>Documentation:</b> generateJavaDoc (default: true)
  * </ul>
  *
  * <p>This annotation is itself a built-in {@link Template}: it is meta-annotated with
@@ -665,6 +666,18 @@ public @interface SimpleBuilder {
      * @return the package name for the Jackson module
      */
     String jacksonModulePackage() default "";
+
+    /**
+     * Generate Javadoc comments on the generated builder class and its members. <br>
+     * When disabled, no class, field, constructor or method Javadoc is emitted, producing smaller
+     * generated files.
+     *
+     * <p>Default: ENABLED <br>
+     * Compiler option: -Asimplebuilder.generateJavaDoc
+     *
+     * @return the option state for generating Javadoc
+     */
+    OptionState generateJavaDoc() default OptionState.UNSET;
 
     // === Naming ===
     /**

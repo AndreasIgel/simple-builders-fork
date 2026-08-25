@@ -24,7 +24,6 @@
 
 package org.javahelpers.simple.builders.processor;
 
-import static org.javahelpers.simple.builders.processor.model.core.BuilderToGenerationTypeMapper.toRenderingDto;
 import static org.javahelpers.simple.builders.processor.processing.BuilderDefinitionCreator.extractFromElement;
 import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_BUILDER_DEFINITION_EXTRACTION;
 import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.PHASE_CODE_GENERATION;
@@ -55,6 +54,7 @@ import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.generators.integration.JacksonModuleGenerator;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
+import org.javahelpers.simple.builders.processor.model.core.BuilderToGenerationTypeMapper;
 import org.javahelpers.simple.builders.processor.model.core.GenerationTargetClassDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameList;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameMap;
@@ -263,11 +263,13 @@ public class BuilderProcessor extends AbstractProcessor {
 
     // Track DTO Mapping
     tracker.startPhase();
-    GenerationTargetClassDto renderingDto = toRenderingDto(builderDef);
+    GenerationTargetClassDto renderingDto =
+        new BuilderToGenerationTypeMapper(config).toRenderingDto(builderDef);
     tracker.endPhase(PHASE_DTO_MAPPING);
 
     // Track Code Generation (parent phase; sub-phases tracked inside RoasterCodeGenerator)
     tracker.startPhase();
+    
     codeGenerator.generateClass(renderingDto);
     tracker.endPhase(PHASE_CODE_GENERATION);
 
