@@ -336,6 +336,7 @@ public class BuilderConfigurationReader {
         case "jacksonModulePackage" -> builder.jacksonModulePackage(value.toString());
         case "builderSuffix" -> builder.builderSuffix(value.toString());
         case "setterSuffix" -> builder.setterSuffix(value.toString());
+        case "formattingMode" -> builder.formattingMode(value.toString());
         default ->
             logger.warning(
                 "Unknown configuration option '%s' with value '%s' - ignoring", name, value);

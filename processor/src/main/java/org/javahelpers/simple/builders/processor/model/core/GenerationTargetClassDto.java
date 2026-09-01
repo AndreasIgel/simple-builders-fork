@@ -29,6 +29,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
+import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
 import org.javahelpers.simple.builders.processor.model.imports.ImportStatement;
@@ -93,6 +94,9 @@ public class GenerationTargetClassDto {
 
   /** Class-level JavaDoc for the generated class. */
   private JavadocDto classJavadoc;
+
+  /** Formatting mode for this generated class (null = use global default). */
+  private FormattingMode formattingMode;
 
   public TypeName getTypeName() {
     return typeName;
@@ -287,5 +291,23 @@ public class GenerationTargetClassDto {
    */
   public void setClassJavadoc(JavadocDto classJavadoc) {
     this.classJavadoc = classJavadoc;
+  }
+
+  /**
+   * Returns the formatting mode for this generated class.
+   *
+   * @return the formatting mode, or null to use the global default
+   */
+  public FormattingMode getFormattingMode() {
+    return formattingMode;
+  }
+
+  /**
+   * Sets the formatting mode for this generated class.
+   *
+   * @param formattingMode the formatting mode, or null to use the global default
+   */
+  public void setFormattingMode(FormattingMode formattingMode) {
+    this.formattingMode = formattingMode;
   }
 }

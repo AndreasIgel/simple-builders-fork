@@ -94,7 +94,8 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
             copyTypeAnnotations = OptionState.DISABLED,
             implementsBuilderBase = OptionState.DISABLED,
             builderSuffix = "Builder",
-            setterSuffix = ""))
+            setterSuffix = "",
+            formattingMode = "lightweight"))
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
 @Inherited

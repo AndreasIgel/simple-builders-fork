@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.google.testing.compile.Compilation;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
+import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.core.enums.OptionState;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
@@ -86,6 +87,8 @@ class ConfigurationProcessingTest {
             // Naming
             .builderSuffix("Builder")
             .setterSuffix("")
+            // Formatting
+            .formattingMode("lightweight")
             .build();
 
     // Verify all options are accessible (this will fail to compile if accessors are missing)
@@ -115,6 +118,7 @@ class ConfigurationProcessingTest {
     assertEquals(OptionState.ENABLED, config.generateJavaDoc());
     assertEquals("Builder", config.getBuilderSuffix());
     assertEquals("", config.getSetterSuffix());
+    assertEquals("lightweight", config.formattingMode());
   }
 
   /**
@@ -536,6 +540,50 @@ class ConfigurationProcessingTest {
         merged.getBuilderAccess(),
         "Base value should be kept when override is DEFAULT");
     assertEquals("with", merged.getSetterSuffix(), "Override should win for setterSuffix");
+  }
+
+  /** Merge logic test for formattingMode: Annotation value must override compiler arg default. */
+  @Test
+  void configurationMerge_FormattingMode_MustRespectPriority() {
+    // Given: Base config with no formattingMode (inherit from compiler arg)
+    BuilderConfiguration base = BuilderConfiguration.builder().build();
+
+    // When: Merge with override that sets formattingMode
+    BuilderConfiguration override = BuilderConfiguration.builder().formattingMode("none").build();
+
+    BuilderConfiguration merged = base.merge(override);
+
+    // Then: Override should win
+    assertEquals("none", merged.formattingMode(), "Override should win for formattingMode");
+
+    // And: formattingModeEnum should return the override value
+    assertEquals(
+        FormattingMode.NONE,
+        merged.formattingModeEnum(),
+        "Annotation formattingMode should override compiler arg fallback");
+  }
+
+  /** formattingModeEnum test: Null/blank formattingMode should default to JDT. */
+  @Test
+  void formattingModeEnum_WhenUnset_ShouldDefaultToJdt() {
+    BuilderConfiguration config = BuilderConfiguration.builder().build();
+
+    assertEquals(
+        FormattingMode.JDT,
+        config.formattingModeEnum(),
+        "Null formattingMode should default to JDT");
+  }
+
+  /** formattingModeEnum test: Set formattingMode should be resolved. */
+  @Test
+  void formattingModeEnum_WhenSet_ShouldReturnSetValue() {
+    BuilderConfiguration config =
+        BuilderConfiguration.builder().formattingMode("lightweight").build();
+
+    assertEquals(
+        FormattingMode.LIGHTWEIGHT,
+        config.formattingModeEnum(),
+        "Set formattingMode should be resolved correctly");
   }
 
   /**

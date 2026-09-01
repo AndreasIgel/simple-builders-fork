@@ -21,7 +21,9 @@ Simple-builders supports fine-grained configuration through the `@SimpleBuilder.
   - [Integration](#integration)
   - [Documentation](#documentation)
   - [Reliability](#reliability)
+  - [Debug Logging](#debug-logging)
   - [Performance Tracking](#performance-tracking)
+  - [Performance Optimization](#performance-optimization)
 - [Examples](#examples)
   - [Minimal Builder](#minimal-builder)
   - [Internal API Builder](#internal-api-builder)
@@ -993,6 +995,55 @@ mvn compile \
 
 **Note**: `performanceTracking` must be enabled for `performanceOutputFile` to have any effect.
 
+---
+
+### Debug Logging
+
+#### `verbose`
+
+**Default**: `false` | **Compiler Option**: `-Asimplebuilder.verbose=true|false`
+
+> **Note**: This is a **processor-level option** only. It cannot be set per-annotation via
+> `@SimpleBuilder.Options`.
+
+Enables debug logging during annotation processing, providing detailed tracing of field discovery,
+method analysis, and code generation steps. See [DEBUG_LOGGING.md](DEBUG_LOGGING.md) for detailed
+information on log levels, output format, and configuration examples.
+
+---
+
+### Performance Optimization
+
+#### `formattingMode`
+
+**Default**: `jdt` | **Compiler Option**: `-Asimplebuilder.formattingMode=JDT|LIGHTWEIGHT|NONE`
+| **Annotation Option**: `@SimpleBuilder.Options(formattingMode = "lightweight")`
+
+Controls how generated source code is post-processed before being written to disk:
+
+| Mode | Description | Trade-offs |
+|------|-------------|------------|
+| `JDT` (default) | Full Eclipse JDT formatter | Highest quality; slowest (~40% of generation time) |
+| `LIGHTWEIGHT` | Minimal cosmetic fixes (tabs→spaces, blank line collapse, javadoc prefixes) | Fast; no line wrapping or import ordering |
+| `NONE` | Raw Roaster output, no post-processing | Fastest; no indentation, not suitable for committed code |
+
+**Example**:
+```bash
+# Maven
+mvn compile -Dsimplebuilder.formattingMode=lightweight
+
+# Or via compiler arg
+-Asimplebuilder.formattingMode=lightweight
+```
+
+Per-annotation override:
+```java
+@SimpleBuilder(options = @SimpleBuilder.Options(
+    formattingMode = "lightweight"
+))
+public class PersonDto { ... }
+```
+
 ## Examples
 
 ### Minimal Builder
@@ -1347,6 +1398,7 @@ methodAccess = AccessModifier.PRIVATE
 -Asimplebuilder.generateStringFormatHelpers=ENABLED|DISABLED
 -Asimplebuilder.generateAddToCollectionHelpers=ENABLED|DISABLED
 -Asimplebuilder.generateUnboxedOptional=ENABLED|DISABLED
+-Asimplebuilder.copyTypeAnnotations=ENABLED|DISABLED
 
 # Collection Helpers
 -Asimplebuilder.usingArrayListBuilder=ENABLED|DISABLED
@@ -1363,6 +1415,9 @@ methodAccess = AccessModifier.PRIVATE
 -Asimplebuilder.implementsBuilderBase=ENABLED|DISABLED
 -Asimplebuilder.usingGeneratedAnnotation=ENABLED|DISABLED
 -Asimplebuilder.usingBuilderImplementationAnnotation=ENABLED|DISABLED
+-Asimplebuilder.usingJacksonDeserializerAnnotation=ENABLED|DISABLED
+-Asimplebuilder.generateJacksonModule=ENABLED|DISABLED
+-Asimplebuilder.jacksonModulePackage=com.your.package
 
 # Documentation
 -Asimplebuilder.generateJavaDoc=ENABLED|DISABLED
@@ -1374,9 +1429,15 @@ methodAccess = AccessModifier.PRIVATE
 # Reliability
 -Asimplebuilder.strict=ENABLED|DISABLED
 
+# Debug Logging
+-Asimplebuilder.verbose=true|false
+
 # Performance Tracking
 -Asimplebuilder.performanceTracking=true|false
 -Asimplebuilder.performanceOutputFile=path/to/report.json
+
+# Performance Optimization
+-Asimplebuilder.formattingMode=JDT|LIGHTWEIGHT|NONE
 ```
 
 ### Complete Options Example

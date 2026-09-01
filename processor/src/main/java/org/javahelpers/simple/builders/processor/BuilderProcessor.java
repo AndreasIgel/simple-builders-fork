@@ -94,7 +94,7 @@ public class BuilderProcessor extends AbstractProcessor {
     this.context = new ProcessingContext(logger, globalConfig, processingEnv);
     this.codeGenerator =
         new RoasterCodeGenerator(processingEnv, logger, context.getPerformanceTracker());
-    this.jacksonModuleGenerator = new JacksonModuleGenerator(processingEnv, logger);
+    this.jacksonModuleGenerator = new JacksonModuleGenerator(processingEnv, logger, globalConfig);
 
     // Initialize GeneratorRegistry once during processor initialization
     context.debugStartOperation("Initializing generator registry");
@@ -269,7 +269,7 @@ public class BuilderProcessor extends AbstractProcessor {
 
     // Track Code Generation (parent phase; sub-phases tracked inside RoasterCodeGenerator)
     tracker.startPhase();
-    
+
     codeGenerator.generateClass(renderingDto);
     tracker.endPhase(PHASE_CODE_GENERATION);
 

@@ -29,12 +29,11 @@ import static org.javahelpers.simple.builders.processor.classgen.roaster.Roaster
 import static org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker.*;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Writer;
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -43,6 +42,7 @@ import javax.tools.JavaFileObject;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
+import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.annotation.InterfaceName;
@@ -71,12 +71,9 @@ import org.jboss.forge.roaster.model.source.JavaSource;
 import org.jboss.forge.roaster.model.source.MethodSource;
 import org.jboss.forge.roaster.model.source.ParameterSource;
 import org.jboss.forge.roaster.model.source.TypeVariableSource;
-import org.jboss.forge.roaster.model.util.FormatterProfileReader;
 
 /** Roaster-based code generator for builder source files. */
 public class RoasterCodeGenerator {
-  private static final String FORMATTER_PROFILE_RESOURCE = "eclipse-java-format.xml";
-
   /** Processing environment for accessing filer and element utilities. */
   private final ProcessingEnvironment processingEnv;
 
@@ -86,20 +83,35 @@ public class RoasterCodeGenerator {
   /** Performance tracker for sub-phase timing (Source Construction, File Writing). */
   private final PerformanceTracker performanceTracker;
 
-  private final Properties formatterProperties;
+  /** Cached formatters per formatting mode (at most 3 instances, created lazily). */
+  private final EnumMap<FormattingMode, RoasterSourceFormatter> formatterCache =
+      new EnumMap<>(FormattingMode.class);
 
   /**
    * Constructor for RoasterCodeGenerator.
    *
    * @param processingEnv Processing environment for accessing filer and element utilities
    * @param logger Logger for debug output
+   * @param tracker Performance tracker for sub-phase timing
    */
   public RoasterCodeGenerator(
       ProcessingEnvironment processingEnv, ProcessingLogger logger, PerformanceTracker tracker) {
     this.processingEnv = processingEnv;
     this.logger = logger;
     this.performanceTracker = tracker;
-    this.formatterProperties = loadFormatterProperties();
+  }
+
+  /**
+   * Returns a cached or newly created {@link RoasterSourceFormatter} for the given mode.
+   *
+   * <p>At most 3 formatter instances exist (one per {@link FormattingMode} enum value), created
+   * lazily on first use.
+   *
+   * @param mode the formatting mode
+   * @return a cached or new formatter instance
+   */
+  private RoasterSourceFormatter getFormatter(FormattingMode mode) {
+    return formatterCache.computeIfAbsent(mode, m -> new RoasterSourceFormatter(logger, m));
   }
 
   /**
@@ -120,7 +132,7 @@ public class RoasterCodeGenerator {
       String unformatted = source.toUnformattedString();
       performanceTracker.endPhase(PHASE_STRING_GENERATION);
       performanceTracker.startPhase();
-      sourceCode = formatSource(unformatted);
+      sourceCode = formatSource(unformatted, classDef.getFormattingMode());
       // Roaster renders some java.lang annotations (e.g. @SuppressWarnings, @Deprecated with
       // members) with their FQN (@java.lang.SuppressWarnings) even though java.lang types don't
       // need qualification. Fix this by replacing @java.lang.Xxx with @Xxx for known annotations.
@@ -555,40 +567,8 @@ public class RoasterCodeGenerator {
     applyAnnotations(parameter, paramDto.getAnnotations());
   }
 
-  private String formatSource(String rawSource) {
-    if (formatterProperties.isEmpty()) {
-      return rawSource;
-    }
-    try {
-      return Roaster.format(formatterProperties, rawSource);
-    } catch (Exception ex) {
-      logger.warning(
-          "simple-builders: Failed to format generated source with bundled Eclipse formatter profile: %s",
-          StringUtils.defaultIfBlank(ex.getMessage(), ex.getClass().getSimpleName()));
-      return rawSource;
-    }
-  }
-
-  private Properties loadFormatterProperties() {
-    try (InputStream inputStream =
-        RoasterCodeGenerator.class
-            .getClassLoader()
-            .getResourceAsStream(FORMATTER_PROFILE_RESOURCE)) {
-      if (inputStream == null) {
-        logger.warning(
-            "simple-builders: Bundled Eclipse formatter profile '%s' was not found on the processor classpath.",
-            FORMATTER_PROFILE_RESOURCE);
-        return new Properties();
-      }
-      FormatterProfileReader profileReader = FormatterProfileReader.fromEclipseXml(inputStream);
-      return profileReader.getDefaultProperties();
-    } catch (IOException ex) {
-      logger.warning(
-          "simple-builders: Failed to load bundled Eclipse formatter profile '%s': %s",
-          FORMATTER_PROFILE_RESOURCE,
-          StringUtils.defaultIfBlank(ex.getMessage(), ex.getClass().getSimpleName()));
-      return new Properties();
-    }
+  private String formatSource(String rawSource, FormattingMode mode) {
+    return getFormatter(mode).format(rawSource);
   }
 
   private void writeClassToFile(String sourceCode, GenerationTargetClassDto classDef)

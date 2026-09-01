@@ -74,7 +74,7 @@
     <sonar.projectName>Simple Builders</sonar.projectName>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <sonar.java.binaries>${project.basedir}/core/target/classes,${project.basedir}/processor/target/classes</sonar.java.binaries>
-    <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/core/target/site/jacoco/jacoco.xml,${project.basedir}/processor/target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+    <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/processor/target/site/jacoco-aggregate/jacoco.xml,${project.basedir}/processor/target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
     <sonar.exclusions>**/example/**</sonar.exclusions>
     <!-- Coverage exclusion needs to match jacoco configuration in processor module.
          Only genuine boilerplate is excluded (DTO model, exception classes, generated

@@ -32,6 +32,7 @@ import javax.lang.model.element.Element;
 import org.apache.commons.collections4.SetValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
+import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.processor.model.annotation.AnnotationDto;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.core.BuilderDefinitionDto;
@@ -61,13 +62,18 @@ public class JacksonModuleGenerator {
 
   private final ProcessingEnvironment processingEnv;
   private final ProcessingLogger logger;
+  private final BuilderConfiguration globalConfiguration;
   private final SetValuedMap<String, JacksonModuleEntryDto> entriesByPackage =
       new HashSetValuedHashMap<>();
   private final boolean jacksonAvailable;
 
-  public JacksonModuleGenerator(ProcessingEnvironment processingEnv, ProcessingLogger logger) {
+  public JacksonModuleGenerator(
+      ProcessingEnvironment processingEnv,
+      ProcessingLogger logger,
+      BuilderConfiguration globalConfiguration) {
     this.processingEnv = processingEnv;
     this.logger = logger;
+    this.globalConfiguration = globalConfiguration;
     this.jacksonAvailable =
         this.processingEnv
                 .getElementUtils()
@@ -133,6 +139,7 @@ public class JacksonModuleGenerator {
    * @return list of target class definitions, one per package
    */
   public List<GenerationTargetClassDto> getModuleDefinitions() {
+    FormattingMode formattingMode = globalConfiguration.formattingModeEnum();
     List<GenerationTargetClassDto> definitions = new ArrayList<>();
     if (!entriesByPackage.isEmpty()) {
       logger.info(
@@ -141,7 +148,7 @@ public class JacksonModuleGenerator {
 
       for (String packageName : entriesByPackage.keySet()) {
         Set<JacksonModuleEntryDto> moduleEntries = entriesByPackage.get(packageName);
-        definitions.add(buildTargetClass(packageName, moduleEntries));
+        definitions.add(buildTargetClass(packageName, moduleEntries, formattingMode));
       }
     }
     clear();
@@ -153,14 +160,16 @@ public class JacksonModuleGenerator {
    *
    * @param packageName target package of the generated module class
    * @param entries DTO/builder type pairs to register as mixins
+   * @param formattingMode the formatting mode to use for the generated module class
    * @return a fully populated class definition ready for code generation
    */
   private GenerationTargetClassDto buildTargetClass(
-      String packageName, Set<JacksonModuleEntryDto> entries) {
+      String packageName, Set<JacksonModuleEntryDto> entries, FormattingMode formattingMode) {
     GenerationTargetClassDto classDef = new GenerationTargetClassDto();
     classDef.setTypeName(new TypeName(packageName, MODULE_CLASS_NAME));
     classDef.setClassAccessModifier(AccessModifier.PUBLIC);
     classDef.setSuperType(SIMPLE_MODULE_TYPE);
+    classDef.setFormattingMode(formattingMode);
 
     // Each entry becomes a private nested mixin interface annotated with @JsonDeserialize.
     for (JacksonModuleEntryDto entry : entries) {

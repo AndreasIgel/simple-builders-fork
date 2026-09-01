@@ -87,11 +87,20 @@ def main() -> None:
         help="Copy generated builders to generated-builders/<type>/ "
         "so they survive Maven clean",
     )
+    parser.add_argument(
+        "--no-tracking",
+        action="store_true",
+        help="Disable JSON performance tracking for simple-builders types. "
+        "All frameworks are measured with wall-time/compiler-time only, "
+        "avoiding the overhead of the processor's internal performance tracker. "
+        "This ensures a fair comparison without measurement overhead.",
+    )
     args = parser.parse_args()
 
     num_runs = args.runs
     keep_builders = args.keep_builders
     summaries: list[str] = []
+    failures: list[str] = []
 
     for bt in BUILDER_TYPES:
         label = f"{LABEL_PREFIX[bt]}-{num_runs}runs"
@@ -103,19 +112,24 @@ def main() -> None:
             "--builder-type", bt, "--force",
         ])
         if rc != 0:
-            print(f"ERROR: generate_classes.py failed for {bt}")
-            sys.exit(1)
+            print(f"ERROR: generate_classes.py failed for {bt} - skipping")
+            failures.append(f"{bt}: generate_classes.py failed")
+            continue
 
         # 2. Run measurements
-        rc = run([
+        measure_cmd = [
             sys.executable, str(SCRIPT_DIR / "run_performance_measurement.py"),
             "--runs", str(num_runs),
             "--label", label,
             "--builder-type", bt,
-        ])
+        ]
+        if args.no_tracking:
+            measure_cmd.append("--no-tracking")
+        rc = run(measure_cmd)
         if rc != 0:
-            print(f"ERROR: run_performance_measurement.py failed for {bt}")
-            sys.exit(1)
+            print(f"ERROR: run_performance_measurement.py failed for {bt} - skipping")
+            failures.append(f"{bt}: run_performance_measurement.py failed")
+            continue
 
         # 3. Copy generated builders to safe location
         if keep_builders:
@@ -134,7 +148,13 @@ def main() -> None:
 
         summaries.append(f"{label}/summary.json")
 
-    # 4. Compare all
+    # 4. Compare all successful results
+    if not summaries:
+        print("ERROR: No successful measurements to compare.")
+        for f in failures:
+            print(f"  - {f}")
+        sys.exit(1)
+
     print_section("Comparison")
 
     compare_cmd = [sys.executable, str(SCRIPT_DIR / "compare_performance.py")] + summaries
@@ -146,6 +166,11 @@ def main() -> None:
     print()
     print("Full comparison complete.")
     print(f"Reports: {BASE_DIR / 'performance-reports'}")
+    if failures:
+        print()
+        print(f"WARNING: {len(failures)} builder type(s) were skipped due to errors:")
+        for f in failures:
+            print(f"  - {f}")
 
 
 if __name__ == "__main__":

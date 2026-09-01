@@ -729,6 +729,38 @@ public @interface SimpleBuilder {
      * @return the suffix for setter method names
      */
     String setterSuffix() default "";
+
+    /**
+     * Formatting mode for the generated source code. <br>
+     * Controls how the generated builder source is post-processed for readability.
+     *
+     * <p>Accepted values (case-insensitive):
+     *
+     * <ul>
+     *   <li>{@code "jdt"} - Full Eclipse JDT formatting (default)
+     *   <li>{@code "lightweight"} - Lightweight cosmetic formatting (tabs to spaces, javadoc fixup,
+     *       blank line collapsing)
+     *   <li>{@code "none"} - No formatting, raw Roaster output
+     * </ul>
+     *
+     * <p>An empty string (the default) means "inherit from compiler argument {@code
+     * -Asimplebuilder.formattingMode}", which itself defaults to {@code jdt}.
+     *
+     * <p>Example:
+     *
+     * <pre>{@code
+     * @SimpleBuilder(options = @SimpleBuilder.Options(
+     *     formattingMode = "lightweight"
+     * ))
+     * public class PersonDto { ... }
+     * }</pre>
+     *
+     * Default: "" (empty - inherit from compiler argument) <br>
+     * Compiler option: -Asimplebuilder.formattingMode
+     *
+     * @return the formatting mode for generated source code
+     */
+    String formattingMode() default "";
   }
 
   /**

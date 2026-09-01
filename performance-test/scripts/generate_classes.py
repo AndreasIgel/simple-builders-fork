@@ -944,7 +944,6 @@ def main(argv: list[str] | None = None) -> int:
             errors.append(msg)
             print(f"  ERROR: {msg}", file=sys.stderr)
             continue
-        print(f"  wrote: {out_file}")
         written += 1
 
     # --- Generate base classes ---
@@ -975,7 +974,6 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 try:
                     atomic_write(out_file, source)
-                    print(f"  wrote: {out_file}")
                     written += 1
                 except OSError as e:
                     msg = f"failed to write {out_file}: {e}"
@@ -1015,7 +1013,6 @@ def main(argv: list[str] | None = None) -> int:
             errors.append(msg)
             print(f"  ERROR: {msg}", file=sys.stderr)
             continue
-        print(f"  wrote: {out_file}")
         written += 1
 
     # --- Generate DTO classes/records ---
@@ -1103,7 +1100,6 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  ERROR: {msg}", file=sys.stderr)
             continue
 
-        print(f"  wrote: {out_file}")
         written += 1
 
     print()

@@ -106,7 +106,7 @@ jobs:
         mkdir -p sonar-analysis-data
         cp -a core/target/classes sonar-analysis-data/core-classes 2>/dev/null || true
         cp -a processor/target/classes sonar-analysis-data/processor-classes 2>/dev/null || true
-        cp -a core/target/site/jacoco/jacoco.xml sonar-analysis-data/core-jacoco.xml 2>/dev/null || true
+        cp -a processor/target/site/jacoco-aggregate/jacoco.xml sonar-analysis-data/jacoco-aggregate.xml 2>/dev/null || true
         cp -a processor/target/site/jacoco/jacoco.xml sonar-analysis-data/processor-jacoco.xml 2>/dev/null || true
         {
           printf 'pr_number=%s\n' "$PR_NUMBER"
@@ -163,6 +163,7 @@ jobs:
       run: |
         mkdir -p codecov-payload/surefire codecov-payload/failsafe
         cp -f processor/target/site/jacoco/jacoco.xml codecov-payload/ 2>/dev/null || true
+        cp -f processor/target/site/jacoco-aggregate/jacoco.xml codecov-payload/jacoco-aggregate.xml 2>/dev/null || true
         cp -f processor/target/surefire-reports/*.xml codecov-payload/surefire/ 2>/dev/null || true
         cp -f processor/target/failsafe-reports/*.xml codecov-payload/failsafe/ 2>/dev/null || true
         {
@@ -191,13 +192,15 @@ jobs:
         fail_ci_if_error: true
         verbose: false
 
-    - name: Upload coverage to Codecov (processor)
+    - name: Upload coverage to Codecov (processor + core via aggregate)
       # Skip when CODECOV_TOKEN is unavailable (fork PRs) and for any bot-authored PR.
       if: always() && env.CODECOV_TOKEN != '' && github.event.pull_request.user.type != 'Bot'
       uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
       with:
         fail_ci_if_error: true
-        files: processor/target/site/jacoco/jacoco.xml
+        files: |
+          processor/target/site/jacoco/jacoco.xml
+          processor/target/site/jacoco-aggregate/jacoco.xml
         flags: processor
         name: codecov-upload
         verbose: false

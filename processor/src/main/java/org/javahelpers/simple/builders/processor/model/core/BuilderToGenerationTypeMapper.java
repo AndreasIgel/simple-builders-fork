@@ -53,9 +53,9 @@ public class BuilderToGenerationTypeMapper {
   private final BuilderConfiguration configuration;
 
   /**
-   * Creates a mapper for the given effective builder configuration.
+   * Creates a mapper for the given builder configuration.
    *
-   * @param configuration the effective builder configuration
+   * @param configuration the builder configuration (already merged with global compiler arguments)
    */
   public BuilderToGenerationTypeMapper(BuilderConfiguration configuration) {
     this.configuration = configuration;
@@ -78,6 +78,7 @@ public class BuilderToGenerationTypeMapper {
     renderingDto.setSuperType(builderDto.getSuperType());
     renderingDto.setClassJavadoc(
         configuration.shouldGenerateJavaDoc() ? builderDto.getClassJavadoc() : null);
+    renderingDto.setFormattingMode(configuration.formattingModeEnum());
 
     builderDto.getClassFields().stream()
         .map(this::toRenderingClassField)

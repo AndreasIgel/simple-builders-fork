@@ -406,8 +406,6 @@ class DefaultValueTest {
         """);
   }
 
-  // === Default + non-null interaction ===
-
   /**
    * Verifies the interaction between {@code @NotNull} and {@code @Default}:
    *
@@ -470,8 +468,6 @@ class DefaultValueTest {
         """);
   }
 
-  // === Framework-agnostic detection ===
-
   /**
    * Verifies that the processor detects third-party annotations named {@code @DefaultValue} (e.g.,
    * Jakarta REST {@code jakarta.ws.rs.DefaultValue}) by simple name matching, not just our own
@@ -519,8 +515,6 @@ class DefaultValueTest {
         }
         """);
   }
-
-  // === formatDefaultExpression unit tests ===
 
   private static Stream<Arguments> formatDefaultExpressionCases() {
     TypeName enumType = new TypeName("test", "Status");

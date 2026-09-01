@@ -32,6 +32,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
+import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.core.enums.OptionState;
 
 /**
@@ -65,6 +66,8 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  * @param generateJavaDoc Generate Javadoc comments
  * @param builderSuffix Suffix for builder class name
  * @param setterSuffix Suffix for setter method names
+ * @param formattingMode Formatting mode for generated source code (null = inherit from compiler
+ *     arg)
  * @param strict Strict/fail-fast generation mode
  */
 public record BuilderConfiguration(
@@ -95,6 +98,7 @@ public record BuilderConfiguration(
     String jacksonModulePackage,
     String builderSuffix,
     String setterSuffix,
+    String formattingMode,
     OptionState strict) {
 
   public static final BuilderConfiguration DEFAULT =
@@ -126,6 +130,7 @@ public record BuilderConfiguration(
           .jacksonModulePackage(null)
           .builderSuffix("Builder")
           .setterSuffix("")
+          .formattingMode(FormattingMode.JDT.getOptionValue())
           .strict(DISABLED)
           .build();
 
@@ -243,6 +248,10 @@ public record BuilderConfiguration(
     return strict == ENABLED;
   }
 
+  public FormattingMode formattingModeEnum() {
+    return FormattingMode.fromString(formattingMode);
+  }
+
   /**
    * Merges this configuration with another configuration.
    *
@@ -310,6 +319,7 @@ public record BuilderConfiguration(
         .jacksonModulePackage(mergeString(other.jacksonModulePackage, this.jacksonModulePackage))
         .builderSuffix(mergeString(other.builderSuffix, this.builderSuffix))
         .setterSuffix(mergeString(other.setterSuffix, this.setterSuffix))
+        .formattingMode(mergeString(other.formattingMode, this.formattingMode))
         .strict(mergeOptionState(other.strict, this.strict))
         .build();
   }
@@ -377,6 +387,7 @@ public record BuilderConfiguration(
         .appendIfNotEmpty("jacksonModulePackage", jacksonModulePackage)
         .appendIfNotEmpty("builderSuffix", builderSuffix)
         .appendIfNotEmpty("setterSuffix", setterSuffix)
+        .appendIfNotEmpty("formattingMode", formattingMode)
         .appendValueIfSet("strict", strict)
         .toString();
   }
@@ -458,6 +469,9 @@ public record BuilderConfiguration(
     // === Naming ===
     private String builderSuffix = null;
     private String setterSuffix = null;
+
+    // === Formatting ===
+    private String formattingMode = null;
 
     // === Error Handling ===
     private OptionState strict = OptionState.UNSET;
@@ -718,6 +732,11 @@ public record BuilderConfiguration(
       return this;
     }
 
+    public Builder formattingMode(String value) {
+      this.formattingMode = StringUtils.trimToNull(value);
+      return this;
+    }
+
     public Builder strict(OptionState value) {
       this.strict = value;
       return this;
@@ -757,6 +776,7 @@ public record BuilderConfiguration(
           jacksonModulePackage,
           builderSuffix,
           setterSuffix,
+          formattingMode,
           strict);
     }
   }

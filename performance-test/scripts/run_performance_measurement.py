@@ -135,7 +135,11 @@ def parse_compiler_time(output: str) -> Optional[float]:
 
 def run_one(run_index: int, profile: str, is_simple_builders: bool, report_dir: Path,
            builder_type: str = "") -> Optional[dict]:
-    """Run a single clean compile and return the parsed JSON report (or wall-time-only dict)."""
+    """Run a single clean compile and return the parsed JSON report (or wall-time-only dict).
+
+    The report file uses the run_index in its name so that retries overwrite the failed
+    attempt's file rather than accumulating stale files.
+    """
     report_file = report_dir / f"run-{run_index:02d}.json"
 
     source_count = count_source_files()
@@ -412,6 +416,22 @@ def main() -> None:
         "Options: " + ", ".join(BUILDER_TYPE_TO_PROFILE.keys())
         + " (default: simple-builder).",
     )
+    parser.add_argument(
+        "--max-retries",
+        type=int,
+        default=3,
+        help="Maximum retries per run before giving up (default: 3). "
+        "A run that fails (non-zero exit, missing/invalid JSON) is retried "
+        "up to this many times before being skipped.",
+    )
+    parser.add_argument(
+        "--no-tracking",
+        action="store_true",
+        help="Disable JSON performance tracking for simple-builders types. "
+        "Runs are measured with wall-time and compiler-time only (like "
+        "lombok/record-builder), avoiding the overhead of the processor's "
+        "internal performance tracker.",
+    )
     args = parser.parse_args()
 
     num_runs = args.runs
@@ -419,6 +439,9 @@ def main() -> None:
     builder_type = args.builder_type
     profile = BUILDER_TYPE_TO_PROFILE[builder_type]
     is_simple_builders = builder_type in SIMPLE_BUILDERS_TYPES
+    # When --no-tracking is set, disable JSON performance tracking for simple-builders
+    # types so they are measured with wall-time/compiler-time only (like lombok/record-builder).
+    use_tracking = is_simple_builders and not args.no_tracking
 
     report_dir = BASE_DIR / "performance-reports" / run_label
     if report_dir.exists():
@@ -427,21 +450,33 @@ def main() -> None:
 
     print(f"Running {num_runs} performance measurement runs...")
     print(f"Builder type: {builder_type}")
-    print(f"JSON reports: {'yes' if is_simple_builders else 'no (wall-time only)'}")
+    print(f"JSON reports: {'yes' if use_tracking else 'no (wall-time only)'}")
     print(f"Report directory: {report_dir}")
     print()
 
+    max_retries = args.max_retries
     runs: list[dict] = []
+    total_attempts = 0
     for i in range(1, num_runs + 1):
-        run_start = time.time()
-        data = run_one(i, profile, is_simple_builders, report_dir, builder_type)
-        if data is not None:
-            if "_wallTimeSeconds" not in data:
-                data["_wallTimeSeconds"] = time.time() - run_start
-            runs.append(data)
+        data = None
+        attempt = 0
+        while data is None and attempt <= max_retries:
+            attempt += 1
+            total_attempts += 1
+            if attempt > 1:
+                print(f"  Run {i}: retry {attempt - 1}/{max_retries}...", flush=True)
+            run_start = time.time()
+            data = run_one(i, profile, use_tracking, report_dir, builder_type)
+            if data is not None:
+                if "_wallTimeSeconds" not in data:
+                    data["_wallTimeSeconds"] = time.time() - run_start
+                runs.append(data)
+            elif attempt > max_retries:
+                print(f"  Run {i}: giving up after {max_retries} retries", flush=True)
 
     print()
-    print(f"Successful runs: {len(runs)}/{num_runs}")
+    print(f"Successful runs: {len(runs)}/{num_runs}"
+          f" ({total_attempts - num_runs} retries used)")
 
     if not runs:
         print("No successful runs to aggregate.")

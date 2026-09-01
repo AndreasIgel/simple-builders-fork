@@ -92,9 +92,9 @@ jobs:
           mkdir -p core/target/classes processor/target/classes
           cp -a "$src/core-classes/." core/target/classes/ 2>/dev/null || true
           cp -a "$src/processor-classes/." processor/target/classes/ 2>/dev/null || true
-          mkdir -p core/target/site/jacoco processor/target/site/jacoco
-          cp -a "$src/core-jacoco.xml" core/target/site/jacoco/jacoco.xml 2>/dev/null || true
+          mkdir -p processor/target/site/jacoco processor/target/site/jacoco-aggregate
           cp -a "$src/processor-jacoco.xml" processor/target/site/jacoco/jacoco.xml 2>/dev/null || true
+          cp -a "$src/jacoco-aggregate.xml" processor/target/site/jacoco-aggregate/jacoco.xml 2>/dev/null || true
 
       - name: Publish fork PR analysis to SonarCloud
         if: env.SONAR_TOKEN != ''

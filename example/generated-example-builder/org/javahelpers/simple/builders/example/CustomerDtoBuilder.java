@@ -7,7 +7,6 @@ import java.util.List;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.javahelpers.simple.builders.core.util.BuilderToStringStyle;
 import org.javahelpers.simple.builders.core.util.TrackedValue;
-
 public class CustomerDtoBuilder {
 
   private TrackedValue<String> email = unsetValue();
@@ -75,9 +74,6 @@ public class CustomerDtoBuilder {
   @Override
   public String toString() {
     return new ToStringBuilder(this, BuilderToStringStyle.INSTANCE).append("email", this.email)
-        .append("id", this.id)
-        .append("name", this.name)
-        .append("tags", this.tags)
-        .toString();
+        .append("id", this.id).append("name", this.name).append("tags", this.tags).toString();
   }
 }
