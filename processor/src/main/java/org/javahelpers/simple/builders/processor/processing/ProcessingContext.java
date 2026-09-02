@@ -146,8 +146,8 @@ public final class ProcessingContext {
   /**
    * Get the builder scope resolver for deciding whether a builder may be referenced.
    *
-   * <p>The resolver is keyed off the current target configuration and is recomputed when the
-   * target configuration changes.
+   * <p>The resolver is keyed off the current target configuration and is recomputed when the target
+   * configuration changes.
    *
    * @return the builder scope resolver
    */

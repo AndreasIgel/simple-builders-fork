@@ -28,6 +28,10 @@ Simple-builders is designed to be extensible through custom generators and enhan
 
 All generators are managed by a unified `GeneratorRegistry` that loads both method generators and builder enhancers from a single service file, automatically separating them based on their type (using Java's sealed interface feature)
 
+Builder usage decisions are centralized in `BuilderScopeResolver`. Custom generators and enhancers
+do not need any changes: they continue to rely on `TypeName.getBuilderType().isPresent()` when
+checking whether a builder is available.
+
 ## Generator Interface
 
 Simple-builders uses a sealed `Generator` interface hierarchy that supports two types of functionality:

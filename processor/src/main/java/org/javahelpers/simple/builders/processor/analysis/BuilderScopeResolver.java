@@ -27,7 +27,6 @@ import java.util.Optional;
 import java.util.Set;
 import javax.lang.model.element.TypeElement;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
-import org.javahelpers.simple.builders.processor.analysis.JavaLangAnalyser;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
@@ -83,7 +82,8 @@ public final class BuilderScopeResolver {
 
     BuilderConfiguration config = context.getConfiguration();
     TypeName candidate = JavaLangMapper.createBuilderTypeName(referencedType, context);
-    String packageName = JavaLangMapper.extractPackageName(referencedType.getQualifiedName().toString());
+    String packageName =
+        JavaLangMapper.extractPackageName(referencedType.getQualifiedName().toString());
 
     Set<String> generationPackages = config.getBuilderGenerationPackagesSet();
     Set<String> usagePackages = config.getBuilderUsagePackagesSet();

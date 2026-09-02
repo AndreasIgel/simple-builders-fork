@@ -60,6 +60,7 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  *   <li><b>Collection Helpers:</b> generateVarArgsHelpers, usingArrayListBuilder,
  *       usingArrayListBuilderWithElementBuilders, usingHashSetBuilder,
  *       usingHashSetBuilderWithElementBuilders, usingHashMapBuilder (all default: true)
+ *   <li><b>Builder Scoping:</b> builderGenerationPackages, builderUsagePackages (default: empty)
  *   <li><b>Integration:</b> generateWithInterface (default: true)
  *   <li><b>Documentation:</b> generateJavaDoc (default: true)
  * </ul>
@@ -689,8 +690,8 @@ public @interface SimpleBuilder {
      *
      * <p>Example: {@code "com.example.dto, com.example.shared"}
      *
-     * <p>Default: "" (empty - builders are generated for all {@code @SimpleBuilder} annotated
-     * DTOs, no type search) <br>
+     * <p>Default: "" (empty - builders are generated for all {@code @SimpleBuilder} annotated DTOs,
+     * no type search) <br>
      * Compiler option: -Asimplebuilder.builderGenerationPackages
      *
      * @return the packages for which builders are generated
@@ -698,12 +699,12 @@ public @interface SimpleBuilder {
     String builderGenerationPackages() default "";
 
     /**
-     * Comma-separated list of packages whose builders may be used as helper methods for other
-     * DTOs. <br>
-     * Subpackages are included automatically. A type in this scope but not in
-     * {@link #builderGenerationPackages()} must have its compiled builder verified (via type
-     * search) before a builder reference is emitted. If the builder type cannot be resolved, the
-     * field falls back to a plain setter.
+     * Comma-separated list of packages whose builders may be used as helper methods for other DTOs.
+     * <br>
+     * Subpackages are included automatically. A type in this scope but not in {@link
+     * #builderGenerationPackages()} must have its compiled builder verified (via type search)
+     * before a builder reference is emitted. If the builder type cannot be resolved, the field
+     * falls back to a plain setter.
      *
      * <p>Example: {@code "com.example.library, com.example.external"}
      *

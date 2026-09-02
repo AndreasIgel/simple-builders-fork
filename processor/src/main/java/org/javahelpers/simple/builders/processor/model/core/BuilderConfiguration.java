@@ -559,6 +559,7 @@ public record BuilderConfiguration(
 
     // === Error Handling ===
     private OptionState strict = OptionState.UNSET;
+
     // === Setters ===
     public Builder generateSupplier(OptionState value) {
       this.generateFieldSupplier = value;
