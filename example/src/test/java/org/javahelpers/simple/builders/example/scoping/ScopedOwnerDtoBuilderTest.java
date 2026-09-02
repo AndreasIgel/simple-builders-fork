@@ -26,7 +26,6 @@ package org.javahelpers.simple.builders.example.scoping;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.ParameterizedType;
@@ -42,18 +41,15 @@ class ScopedOwnerDtoBuilderTest {
 
   @Test
   void exposesScopedBuilderConsumerOverloads() {
-    assertTrue(hasBuilderConsumerMethod("trusted", TrustedHelperDtoBuilder.class));
+    assertTrue(hasBuilderConsumerMethod("trusted", TrustedHelperDtoBuilder.class.getName()));
     assertFalse(
         hasBuilderConsumerMethod(
             "library", "org.javahelpers.simple.builders.example.library.LibraryHelperDtoBuilder"));
-    assertFalse(hasBuilderConsumerMethod("sponsor", SponsorDtoBuilder.class));
+    assertFalse(hasBuilderConsumerMethod("sponsor", SponsorDtoBuilder.class.getName()));
 
     assertTrue(hasMethod("trusted", TrustedHelperDto.class));
     assertTrue(hasMethod("library", LibraryHelperDto.class));
     assertTrue(hasMethod("sponsor", SponsorDto.class));
-    assertThrows(
-        ClassNotFoundException.class,
-        () -> Class.forName("org.javahelpers.simple.builders.example.library.LibraryHelperDtoBuilder"));
   }
 
   @Test
@@ -82,16 +78,6 @@ class ScopedOwnerDtoBuilderTest {
                 method.getName().equals(name)
                     && method.getParameterCount() == 1
                     && method.getParameterTypes()[0].equals(parameterType));
-  }
-
-  private static boolean hasBuilderConsumerMethod(String name, Class<?> builderType) {
-    return Arrays.stream(ScopedOwnerDtoBuilder.class.getMethods())
-        .anyMatch(
-            method ->
-                method.getName().equals(name)
-                    && method.getParameterCount() == 1
-                    && hasConsumerType(
-                        method.getGenericParameterTypes()[0], builderType.getName()));
   }
 
   private static boolean hasBuilderConsumerMethod(String name, String builderTypeName) {

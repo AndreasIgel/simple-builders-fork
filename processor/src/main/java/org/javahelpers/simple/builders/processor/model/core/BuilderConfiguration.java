@@ -292,8 +292,17 @@ public record BuilderConfiguration(
     return isInScope(packageName, getBuilderUsagePackagesSet());
   }
 
-  private static boolean isInScope(String packageName, Set<String> scopes) {
-    for (String scope : scopes) {
+  /**
+   * Checks whether the given package is within any configured package scope.
+   *
+   * <p>A package matches when it equals a configured scope or is one of its subpackages.
+   *
+   * @param packageName the package to check
+   * @param packageScopes the configured package scopes
+   * @return true if the package is within one of the configured scopes
+   */
+  public static boolean isInScope(String packageName, Set<String> packageScopes) {
+    for (String scope : packageScopes) {
       if (packageName.equals(scope) || packageName.startsWith(scope + ".")) {
         return true;
       }

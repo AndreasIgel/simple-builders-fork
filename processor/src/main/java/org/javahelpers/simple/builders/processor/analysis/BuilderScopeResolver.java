@@ -27,6 +27,7 @@ import java.util.Optional;
 import java.util.Set;
 import javax.lang.model.element.TypeElement;
 import org.javahelpers.simple.builders.core.annotations.Ignore4BuilderGeneration;
+import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
@@ -37,8 +38,13 @@ import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
  * <p>This resolver is independent of generator/enhancer code; it only relies on the configured
  * {@code builderGenerationPackages} and {@code builderUsagePackages} scopes and on the availability
  * of the builder type on the classpath.
+ *
+ * <p>The resolver is constructed per target configuration and holds its parsed package scopes.
  */
 public final class BuilderScopeResolver {
+
+  private final Set<String> generationPackages;
+  private final Set<String> usagePackages;
 
   /**
    * Creates a new resolver for the given processing context.
@@ -46,8 +52,9 @@ public final class BuilderScopeResolver {
    * @param context the processing context providing configuration and type utilities
    */
   public BuilderScopeResolver(ProcessingContext context) {
-    // Resolver is stateless; context is passed per resolution call to stay keyed to the
-    // current target configuration.
+    BuilderConfiguration config = context.getConfiguration();
+    this.generationPackages = config == null ? Set.of() : config.getBuilderGenerationPackagesSet();
+    this.usagePackages = config == null ? Set.of() : config.getBuilderUsagePackagesSet();
   }
 
   /**
@@ -80,13 +87,9 @@ public final class BuilderScopeResolver {
       return Optional.empty();
     }
 
-    BuilderConfiguration config = context.getConfiguration();
     TypeName candidate = JavaLangMapper.createBuilderTypeName(referencedType, context);
     String packageName =
         JavaLangMapper.extractPackageName(referencedType.getQualifiedName().toString());
-
-    Set<String> generationPackages = config.getBuilderGenerationPackagesSet();
-    Set<String> usagePackages = config.getBuilderUsagePackagesSet();
 
     // Both scopes unset → full backward compatibility, no type search.
     if (generationPackages.isEmpty() && usagePackages.isEmpty()) {
@@ -94,12 +97,13 @@ public final class BuilderScopeResolver {
     }
 
     // Generation scope: trusted types whose builders are generated in this compilation.
-    if (!generationPackages.isEmpty() && isInScope(packageName, generationPackages)) {
+    if (!generationPackages.isEmpty()
+        && BuilderConfiguration.isInScope(packageName, generationPackages)) {
       return Optional.of(candidate);
     }
 
     // Usage scope: types whose builders may already be compiled; verify existence.
-    if (!usagePackages.isEmpty() && isInScope(packageName, usagePackages)) {
+    if (!usagePackages.isEmpty() && BuilderConfiguration.isInScope(packageName, usagePackages)) {
       return context.getTypeElement(candidate.getFullQualifiedName()) != null
           ? Optional.of(candidate)
           : Optional.empty();
@@ -112,20 +116,6 @@ public final class BuilderScopeResolver {
     if (typeElement == null) {
       return false;
     }
-    return JavaLangAnalyser.findAnnotation(
-            typeElement, org.javahelpers.simple.builders.core.annotations.SimpleBuilder.class)
-        .isPresent();
-  }
-
-  private static boolean isInScope(String packageName, Set<String> scopes) {
-    if (scopes.isEmpty()) {
-      return false;
-    }
-    for (String scope : scopes) {
-      if (packageName.equals(scope) || packageName.startsWith(scope + ".")) {
-        return true;
-      }
-    }
-    return false;
+    return JavaLangAnalyser.findAnnotation(typeElement, SimpleBuilder.class).isPresent();
   }
 }
