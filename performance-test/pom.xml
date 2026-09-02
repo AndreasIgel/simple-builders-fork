@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>io.github.java-helpers</groupId>
+  <artifactId>simple-builders-performance-test</artifactId>
+  <version>0.6.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <name>Simple Builders - Performance Test</name>
+  <description>Performance test module with 1000 DTO classes for measuring builder generation performance. Not part of the default build.</description>
+  <url>https://github.com/java-helpers/simple-builders</url>
+  <inceptionYear>2026</inceptionYear>
+
+  <properties>
+    <java.version>17</java.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+    <commons-lang.version>3.20.0</commons-lang.version>
+
+    <!-- Builder framework versions for performance comparison profiles -->
+    <record-builder.version>53</record-builder.version>
+    <lombok.version>1.18.46</lombok.version>
+
+    <maven.compiler.source>${java.version}</maven.compiler.source>
+    <maven.compiler.target>${java.version}</maven.compiler.target>
+    <maven.compiler.release>${java.version}</maven.compiler.release>
+
+    <!-- Performance tracking disabled by default; enable with -Asimplebuilder.performanceTracking=true -->
+    <simplebuilder.performanceTracking>false</simplebuilder.performanceTracking>
+    <simplebuilder.performanceOutputFile></simplebuilder.performanceOutputFile>
+    <simplebuilder.formattingMode>jdt</simplebuilder.formattingMode>
+
+    <plugin.maven.compiler.version>3.15.0</plugin.maven.compiler.version>
+    <plugin.maven.deploy.version>3.1.4</plugin.maven.deploy.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.github.java-helpers</groupId>
+      <artifactId>simple-builders-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>${commons-lang.version}</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!-- Skip deployment for this module -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <version>${plugin.maven.deploy.version}</version>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${plugin.maven.compiler.version}</version>
+        <configuration>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
+          <release>${java.version}</release>
+          <generatedSourcesDirectory>${project.basedir}/generated-performance-builder</generatedSourcesDirectory>
+        </configuration>
+        <executions>
+          <execution>
+            <id>default-testCompile</id>
+            <configuration>
+              <proc>none</proc>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <!--
+      Default profile: uses @SimpleBuilder with all features enabled.
+      This is the standard simple-builders configuration with performance tracking.
+    -->
+    <profile>
+      <id>simplebuilder</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <simplebuilder.performanceTracking>false</simplebuilder.performanceTracking>
+        <simplebuilder.performanceOutputFile></simplebuilder.performanceOutputFile>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>${plugin.maven.compiler.version}</version>
+            <executions>
+              <execution>
+                <id>default-compile</id>
+                <configuration>
+                  <annotationProcessorPaths>
+                    <path>
+                      <groupId>io.github.java-helpers</groupId>
+                      <artifactId>simple-builders-processor</artifactId>
+                      <version>${project.version}</version>
+                    </path>
+                  </annotationProcessorPaths>
+                  <compilerArgs>
+                    <arg>-Asimplebuilder.performanceTracking=${simplebuilder.performanceTracking}</arg>
+                    <arg>-Asimplebuilder.performanceOutputFile=${simplebuilder.performanceOutputFile}</arg>
+                    <arg>-Asimplebuilder.formattingMode=${simplebuilder.formattingMode}</arg>
+                  </compilerArgs>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <!--
+      SimpleMinimalBuilder profile: uses @SimpleMinimalBuilder annotation which
+      disables all optional features via its template. No compiler args needed.
+    -->
+    <profile>
+      <id>minimalbuilder</id>
+      <properties>
+        <simplebuilder.performanceTracking>false</simplebuilder.performanceTracking>
+        <simplebuilder.performanceOutputFile></simplebuilder.performanceOutputFile>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>${plugin.maven.compiler.version}</version>
+            <executions>
+              <execution>
+                <id>default-compile</id>
+                <configuration>
+                  <annotationProcessorPaths>
+                    <path>
+                      <groupId>io.github.java-helpers</groupId>
+                      <artifactId>simple-builders-processor</artifactId>
+                      <version>${project.version}</version>
+                    </path>
+                  </annotationProcessorPaths>
+                  <compilerArgs>
+                    <arg>-Asimplebuilder.performanceTracking=${simplebuilder.performanceTracking}</arg>
+                    <arg>-Asimplebuilder.performanceOutputFile=${simplebuilder.performanceOutputFile}</arg>
+                    <arg>-Asimplebuilder.formattingMode=${simplebuilder.formattingMode}</arg>
+                  </compilerArgs>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <!--
+      RecordBuilder profile: uses the RecordBuilder library for benchmarking
+      its annotation processing performance against simple-builders.
+      No performance tracking JSON is produced — only wall time is measured.
+    -->
+    <profile>
+      <id>recordbuilder</id>
+      <dependencies>
+        <dependency>
+          <groupId>io.soabase.record-builder</groupId>
+          <artifactId>record-builder-core</artifactId>
+          <version>${record-builder.version}</version>
+        </dependency>
+      </dependencies>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>${plugin.maven.compiler.version}</version>
+            <executions>
+              <execution>
+                <id>default-compile</id>
+                <configuration>
+                  <annotationProcessorPaths>
+                    <path>
+                      <groupId>io.soabase.record-builder</groupId>
+                      <artifactId>record-builder-processor</artifactId>
+                      <version>${record-builder.version}</version>
+                    </path>
+                  </annotationProcessorPaths>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <!--
+      Lombok profile: uses Lombok @Builder for benchmarking its annotation
+      processing performance against simple-builders.
+      No performance tracking JSON is produced — only wall time is measured.
+    -->
+    <profile>
+      <id>lombok</id>
+      <dependencies>
+        <dependency>
+          <groupId>org.projectlombok</groupId>
+          <artifactId>lombok</artifactId>
+          <version>${lombok.version}</version>
+          <scope>provided</scope>
+        </dependency>
+      </dependencies>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>${plugin.maven.compiler.version}</version>
+            <executions>
+              <execution>
+                <id>default-compile</id>
+                <configuration>
+                  <annotationProcessorPaths>
+                    <path>
+                      <groupId>org.projectlombok</groupId>
+                      <artifactId>lombok</artifactId>
+                      <version>${lombok.version}</version>
+                    </path>
+                  </annotationProcessorPaths>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+</project>

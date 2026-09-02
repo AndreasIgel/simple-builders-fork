@@ -65,6 +65,15 @@ After making code changes:
    - Changes affecting generation: `mvn test -pl processor,example -am`
 3. **Full validation before committing**: `mvn clean test`
 
+### Adding or Modifying Configuration Options
+
+Configuration options flow through a three-layer merge chain: built-in defaults
+(`BuilderConfiguration.DEFAULT`), compiler arguments
+(`CompilerArgumentsReader.readBuilderConfiguration()`), and annotation values
+(`@SimpleBuilder.Options(...)`). Every option must be wired through all three layers.
+See the comment in `CompilerArgumentsReader.readBuilderConfiguration()` for the detailed
+checklist of files to touch.
+
 ### Test Assertions Best Practices
 
 - **Use explicit string literals** for expected values, not variables

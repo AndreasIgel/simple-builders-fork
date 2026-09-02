@@ -39,6 +39,7 @@ import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.enums.OptionState;
 import org.javahelpers.simple.builders.processor.exceptions.BuilderException;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
+import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 
 /**
  * Reads builder configuration from annotated elements.
@@ -331,9 +332,11 @@ public class BuilderConfigurationReader {
             builder.usingJacksonDeserializerAnnotation(OptionState.valueOf(enumValue));
         case "generateJacksonModule" ->
             builder.generateJacksonModule(OptionState.valueOf(enumValue));
+        case "generateJavaDoc" -> builder.generateJavaDoc(OptionState.valueOf(enumValue));
         case "jacksonModulePackage" -> builder.jacksonModulePackage(value.toString());
         case "builderSuffix" -> builder.builderSuffix(value.toString());
         case "setterSuffix" -> builder.setterSuffix(value.toString());
+        case "formattingMode" -> builder.formattingMode(value.toString());
         default ->
             logger.warning(
                 "Unknown configuration option '%s' with value '%s' - ignoring", name, value);

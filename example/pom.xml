@@ -17,7 +17,7 @@
     <code-format.version>2.25</code-format.version>
     <commons-lang.version>3.20.0</commons-lang.version>
     <junit-jupiter.version>6.1.3</junit-jupiter.version>
-    <jackson-databind.version>2.22.1</jackson-databind.version>
+    <jackson-databind.version>2.22.2</jackson-databind.version>
 
     <plugin.maven.compiler.version>3.15.0</plugin.maven.compiler.version>
     <plugin.maven.deploy.version>3.1.4</plugin.maven.deploy.version>

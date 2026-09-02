@@ -22,12 +22,14 @@
  * SOFTWARE.
  */
 
-package org.javahelpers.simple.builders.processor.processing;
+package org.javahelpers.simple.builders.processor.processing.logging;
 
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.tools.Diagnostic;
+import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsEnum;
+import org.javahelpers.simple.builders.processor.processing.CompilerArgumentsReader;
 
 /**
  * Logger for all messages during annotation processing. Providing util-functions for posting

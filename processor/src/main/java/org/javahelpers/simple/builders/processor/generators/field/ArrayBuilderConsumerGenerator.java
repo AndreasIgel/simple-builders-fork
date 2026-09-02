@@ -38,6 +38,7 @@ import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
+import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /**
@@ -52,8 +53,8 @@ import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
  * converted to an array. This allows fluent array construction with the convenience of list
  * operations.
  *
- * <p><b>Requirements:</b> Only applies to array fields (e.g., {@code String[]}, {@code Integer[]}).
- * Does not apply to primitive arrays like {@code int[]} or {@code boolean[]}.
+ * <p><b>Requirements:</b> Only applies to array fields (e.g., {@code String[]}, {@code Integer[]},
+ * {@code int[]}, {@code boolean[]}).
  *
  * <p>This generator can be deactivated by setting the configuration flag {@code
  * shouldGenerateBuilderConsumer()} to {@code false}. See the configuration documentation for
@@ -131,18 +132,36 @@ public class ArrayBuilderConsumerGenerator implements MethodGenerator {
 
     BuilderMethodDto methodDto = createBuilderMethod(fieldName, returnBuilderType, context);
     methodDto.addParameter(parameter);
-    methodDto.setCode(
-        """
-        $helperType:T builder = this.$fieldName:N.isSet()
-          ? new $helperType:T(java.util.List.of(this.$fieldName:N.value()))
-          : new $helperType:T();
-        $dtoMethodParam:N.accept(builder);
-        this.$fieldName:N = $builderFieldWrapper:T.changedValue(builder.build().toArray(new $elementType:T[0]));
-        return this;
-        """);
-
-    // Add code block import for java.util.List.of
-    methodDto.getMethodCodeDto().addCodeBlockImport(List.class);
+    methodDto.getMethodCodeDto().addCodeBlockImport(java.util.Arrays.class);
+    if (elementType instanceof TypeNamePrimitive) {
+      methodDto.setCode(
+          """
+          $helperType:T builder;
+          if (this.$fieldName:N.isSet()) {
+            builder = new $helperType:T(Arrays.asList(ArrayUtils.toObject(this.$fieldName:N.value())));
+          } else {
+            builder = new $helperType:T(Arrays.asList());
+          }
+          $dtoMethodParam:N.accept(builder);
+          this.$fieldName:N = $builderFieldWrapper:T.changedValue(
+              ArrayUtils.toPrimitive(builder.build().toArray(new $elementType:B[0])));
+          return this;
+          """);
+      methodDto.getMethodCodeDto().addCodeBlockImport(org.apache.commons.lang3.ArrayUtils.class);
+    } else {
+      methodDto.setCode(
+          """
+          $helperType:T builder;
+          if (this.$fieldName:N.isSet()) {
+            builder = new $helperType:T(Arrays.asList(this.$fieldName:N.value()));
+          } else {
+            builder = new $helperType:T(Arrays.asList());
+          }
+          $dtoMethodParam:N.accept(builder);
+          this.$fieldName:N = $builderFieldWrapper:T.changedValue(builder.build().toArray(new $elementType:T[0]));
+          return this;
+          """);
+    }
 
     methodDto.addArgument("fieldName", fieldNameInBuilder);
     methodDto.addArgument("dtoMethodParam", parameter.getParameterName());

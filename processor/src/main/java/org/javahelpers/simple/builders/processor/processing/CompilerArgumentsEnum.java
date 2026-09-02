@@ -113,6 +113,9 @@ public enum CompilerArgumentsEnum {
   /** Option for Jackson Module generation. */
   GENERATE_JACKSON_MODULE("generateJacksonModule"),
 
+  /** Option for Javadoc generation on the generated builder. */
+  GENERATE_JAVADOC("generateJavaDoc"),
+
   /** Option for Jackson Module package name. */
   JACKSON_MODULE_PACKAGE("jacksonModulePackage"),
 
@@ -129,9 +132,24 @@ public enum CompilerArgumentsEnum {
    */
   DEACTIVATE_GENERATION_COMPONENTS("deactivateGenerationComponents"),
 
-  // === Logging ===
+  // === Debug Logging ===
   /** Option for verbose logging output. */
   VERBOSE("verbose"),
+
+  // === Performance Optimization ===
+  /**
+   * Option to control the formatting mode for generated source files. Accepts values {@code jdt},
+   * {@code lightweight}, or {@code none}. See {@link
+   * org.javahelpers.simple.builders.core.enums.FormattingMode} for details.
+   */
+  FORMATTING_MODE("formattingMode"),
+
+  // === Performance Tracking ===
+  /** Option for performance tracking during annotation processing. */
+  PERFORMANCE_TRACKING("performanceTracking"),
+
+  /** Option for performance report JSON output file path. */
+  PERFORMANCE_OUTPUT_FILE("performanceOutputFile"),
 
   // === Error Handling ===
   /**

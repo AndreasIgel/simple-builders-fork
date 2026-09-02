@@ -38,6 +38,7 @@ import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
+import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
 
 /**
  * Unified registry that manages all generators (both method generators and builder enhancers).
@@ -60,6 +61,7 @@ public class GeneratorRegistry {
   private final List<BuilderEnhancer> builderEnhancers;
   private final ProcessingContext context;
   private final ComponentFilter componentFilter;
+  private final PerformanceTracker performanceTracker;
 
   /**
    * Creates a new registry and initializes it with built-in and custom generators.
@@ -72,6 +74,7 @@ public class GeneratorRegistry {
     this.methodGenerators = new ArrayList<>();
     this.builderEnhancers = new ArrayList<>();
     this.componentFilter = new ComponentFilter(processingEnv);
+    this.performanceTracker = context.getPerformanceTracker();
 
     loadAllGenerators();
     sortGeneratorsByPriority();
@@ -102,8 +105,11 @@ public class GeneratorRegistry {
               "Applying: %s (priority: %d)",
               generator.getClass().getSimpleName(), generator.getPriority());
 
+          String genName = generator.getClass().getSimpleName();
+          performanceTracker.startGenerator();
           List<BuilderMethodDto> generatedMethods =
               generator.generateMethods(field, builderType, context);
+          performanceTracker.endGenerator(genName);
 
           if (CollectionUtils.isNotEmpty(generatedMethods)) {
             allMethods.addAll(generatedMethods);
@@ -136,7 +142,10 @@ public class GeneratorRegistry {
               "Applying: %s (priority: %d)",
               enhancer.getClass().getSimpleName(), enhancer.getPriority());
 
+          String enhName = enhancer.getClass().getSimpleName();
+          performanceTracker.startEnhancer();
           enhancer.enhanceBuilder(builderDto, context);
+          performanceTracker.endEnhancer(enhName);
           appliedEnhancers++;
         } catch (Exception e) {
           context.error(

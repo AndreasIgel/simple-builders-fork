@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
@@ -649,6 +650,9 @@ public final class JavaLangMapper {
                 String simpleClassName = elementOfParameter.getSimpleName().toString();
                 String packageName = context.getPackageName(elementOfParameter);
                 TypeName rawType = new TypeName(packageName, simpleClassName);
+                if (elementOfParameter.getKind() == ElementKind.ENUM) {
+                  rawType.setEnumType(true);
+                }
                 TypeMirror enclosingType = t.getEnclosingType();
                 TypeName enclosing =
                     (enclosingType.getKind() != NONE)

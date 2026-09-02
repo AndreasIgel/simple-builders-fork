@@ -136,6 +136,25 @@ public class CompilerArgumentsReader {
    *
    * <p>All values default to UNSET or DEFAULT if not specified in compiler arguments.
    *
+   * <p><b>Adding a new option:</b> every option in {@link CompilerArgumentsEnum} that represents a
+   * configuration value must be read and set here. Omitting it causes the compiler argument to be
+   * silently ignored. The full checklist when adding a new option:
+   *
+   * <ol>
+   *   <li>{@code CompilerArgumentsEnum} — add the enum constant.
+   *   <li>This method — read the value and set it on the builder.
+   *   <li>{@code BuilderConfiguration} — add the field, builder method, merge logic, and a typed
+   *       accessor (e.g. {@code formattingModeEnum}) if enum conversion is needed. Set the default
+   *       in {@code BuilderConfiguration.DEFAULT}.
+   *   <li>{@code BuilderConfigurationReader} — handle annotation-side extraction in {@code
+   *       extractOptionsFromAnnotationMirror}.
+   *   <li>{@code ProcessingContext} — should NOT need a dedicated field or getter. The resolved
+   *       per-target config ({@code context.getConfiguration()}) and global config ({@code
+   *       context.getConfigurationReader().getGlobalConfiguration()}) carry all option values.
+   *       Special-casing outside {@code BuilderConfiguration} breaks the merge chain and bypasses
+   *       annotation overrides.
+   * </ol>
+   *
    * @return a BuilderConfiguration with values read from compiler arguments
    */
   public BuilderConfiguration readBuilderConfiguration() {
@@ -171,9 +190,11 @@ public class CompilerArgumentsReader {
         .usingJacksonDeserializerAnnotation(
             readOptionState(CompilerArgumentsEnum.USING_JACKSON_DESERIALIZER_ANNOTATION))
         .generateJacksonModule(readOptionState(CompilerArgumentsEnum.GENERATE_JACKSON_MODULE))
+        .generateJavaDoc(readOptionState(CompilerArgumentsEnum.GENERATE_JAVADOC))
         .jacksonModulePackage(readValue(CompilerArgumentsEnum.JACKSON_MODULE_PACKAGE))
         .builderSuffix(readValue(CompilerArgumentsEnum.BUILDER_SUFFIX))
         .setterSuffix(readValue(CompilerArgumentsEnum.SETTER_SUFFIX))
+        .formattingMode(readValue(CompilerArgumentsEnum.FORMATTING_MODE))
         .strict(readOptionState(CompilerArgumentsEnum.STRICT))
         .build();
   }

@@ -30,6 +30,9 @@ import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUti
 import com.google.testing.compile.Compilation;
 import java.util.stream.Stream;
 import javax.tools.JavaFileObject;
+import org.javahelpers.simple.builders.processor.analysis.FieldAnnotationExtractor;
+import org.javahelpers.simple.builders.processor.model.type.TypeName;
+import org.javahelpers.simple.builders.processor.model.type.TypeNamePrimitive;
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
 import org.junit.jupiter.api.Test;
@@ -129,6 +132,48 @@ class DefaultValueTest {
           PlainRecord result = new PlainRecord(this.name.value(), this.age.value());
           return result;
         }
+        """),
+        Arguments.of(
+            "EnumDefaultRecord",
+            """
+            package test;
+
+            import org.javahelpers.simple.builders.core.annotations.Default;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public record EnumDefaultRecord(
+                String name,
+                @Default("ACTIVE") Status status) {}
+
+            enum Status { ACTIVE, INACTIVE, PENDING }
+            """,
+            """
+        public EnumDefaultRecord build() {
+          EnumDefaultRecord result = new EnumDefaultRecord(this.name.value(), this.status.valueOr(Status.ACTIVE));
+          return result;
+        }
+        """),
+        Arguments.of(
+            "EnumQualifiedDefaultRecord",
+            """
+            package test;
+
+            import org.javahelpers.simple.builders.core.annotations.Default;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public record EnumQualifiedDefaultRecord(
+                String name,
+                @Default("Priority.HIGH") Priority priority) {}
+
+            enum Priority { LOW, MEDIUM, HIGH }
+            """,
+            """
+        public EnumQualifiedDefaultRecord build() {
+          EnumQualifiedDefaultRecord result = new EnumQualifiedDefaultRecord(this.name.value(), this.priority.valueOr(Priority.HIGH));
+          return result;
+        }
         """));
   }
 
@@ -198,6 +243,124 @@ class DefaultValueTest {
   }
 
   /**
+   * Verifies that a {@code @Default} annotation on an enum-typed setter field qualifies the raw
+   * constant name with the enum class name, producing e.g. {@code .orElse(ItemCondition.GOOD)}
+   * instead of the unqualified {@code .orElse(GOOD)} that would fail to compile.
+   *
+   * @see <a href="https://github.com/java-helpers/simple-builders/issues/260">Issue #260</a>
+   */
+  @Test
+  void defaultAppliedWhenUnset_setterField_enumQualified() {
+    String className = "ChoralScore";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject enumSource =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            public enum ItemCondition { GOOD, FAIR, POOR }
+            """);
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            import org.javahelpers.simple.builders.core.annotations.Default;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public class ChoralScore {
+              private String title;
+              @Default("GOOD")
+              private ItemCondition condition;
+
+              public String getTitle() { return title; }
+              public void setTitle(String title) { this.title = title; }
+              public ItemCondition getCondition() { return condition; }
+              public void setCondition(ItemCondition condition) { this.condition = condition; }
+            }
+            """);
+
+    Compilation compilation = compile(enumSource, sourceFile);
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // build() must use ifSet().orElse() with the qualified enum constant
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        """
+        public ChoralScore build() {
+          ChoralScore result = new ChoralScore();
+          this.condition.ifSet(result::setCondition).orElse(ItemCondition.GOOD);
+          this.title.ifSet(result::setTitle);
+          return result;
+        }
+        """);
+  }
+
+  /**
+   * Verifies that a {@code @Default} annotation with a complex expression (e.g. {@code new
+   * ScoreValue(12)}) on a non-enum field is used as-is without any qualification, supporting
+   * constructor calls and other arbitrary Java expressions.
+   */
+  @Test
+  void defaultAppliedWhenUnset_setterField_complexExpressionUsedAsIs() {
+    String className = "ScoreDto";
+    String builderClassName = className + "Builder";
+
+    JavaFileObject scoreValueSource =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            public class ScoreValue {
+              private final int value;
+              public ScoreValue(int value) { this.value = value; }
+              public int getValue() { return value; }
+            }
+            """);
+
+    JavaFileObject sourceFile =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            import org.javahelpers.simple.builders.core.annotations.Default;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public class ScoreDto {
+              private String name;
+              @Default("new ScoreValue(12)")
+              private ScoreValue score;
+
+              public String getName() { return name; }
+              public void setName(String name) { this.name = name; }
+              public ScoreValue getScore() { return score; }
+              public void setScore(ScoreValue score) { this.score = score; }
+            }
+            """);
+
+    Compilation compilation = compile(scoreValueSource, sourceFile);
+    String generatedCode = loadGeneratedSource(compilation, builderClassName);
+    assertGenerationSucceeded(compilation, builderClassName, generatedCode);
+
+    // build() must use the complex expression as-is (no qualification attempted)
+    ProcessorAsserts.assertContaining(
+        generatedCode,
+        """
+        public ScoreDto build() {
+          ScoreDto result = new ScoreDto();
+          this.name.ifSet(result::setName);
+          this.score.ifSet(result::setScore).orElse(new ScoreValue(12));
+          return result;
+        }
+        """);
+  }
+
+  /**
    * Verifies that a setter-based class field <em>without</em> {@code @Default} generates plain
    * {@code ifSet(result::setStatus);} with no {@code .orElse()} call. This is a regression guard to
    * ensure defaults are not accidentally applied when not declared.
@@ -242,8 +405,6 @@ class DefaultValueTest {
         }
         """);
   }
-
-  // === Default + non-null interaction ===
 
   /**
    * Verifies the interaction between {@code @NotNull} and {@code @Default}:
@@ -307,8 +468,6 @@ class DefaultValueTest {
         """);
   }
 
-  // === Framework-agnostic detection ===
-
   /**
    * Verifies that the processor detects third-party annotations named {@code @DefaultValue} (e.g.,
    * Jakarta REST {@code jakarta.ws.rs.DefaultValue}) by simple name matching, not just our own
@@ -355,5 +514,29 @@ class DefaultValueTest {
           return result;
         }
         """);
+  }
+
+  private static Stream<Arguments> formatDefaultExpressionCases() {
+    TypeName enumType = new TypeName("test", "Status");
+    enumType.setEnumType(true);
+    TypeName nonEnumType = new TypeName("test", "Other");
+    return Stream.of(
+        Arguments.of(enumType, "ACTIVE", "Status.ACTIVE"),
+        Arguments.of(enumType, "", ""),
+        Arguments.of(enumType, "1BAD", "1BAD"),
+        Arguments.of(enumType, "GO OD", "GO OD"),
+        Arguments.of(enumType, "Status.ACTIVE", "Status.ACTIVE"),
+        Arguments.of(enumType, "new Status()", "new Status()"),
+        Arguments.of(nonEnumType, "ACTIVE", "ACTIVE"),
+        Arguments.of(TypeName.of(String.class), "hello", "\"hello\""),
+        Arguments.of(TypeNamePrimitive.CHAR, "X", "'X'"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("formatDefaultExpressionCases")
+  void formatDefaultExpression_producesExpectedOutput(
+      TypeName fieldType, String rawValue, String expected) {
+    org.junit.jupiter.api.Assertions.assertEquals(
+        expected, FieldAnnotationExtractor.formatDefaultExpression(rawValue, fieldType));
   }
 }

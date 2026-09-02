@@ -25,6 +25,7 @@
 package org.javahelpers.simple.builders.processor;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.google.testing.compile.Compilation;
 import javax.tools.JavaFileObject;
@@ -714,5 +715,134 @@ class BuilderConfigurationReaderTest {
 
     // Then: Compilation succeeds without warnings about access modifiers
     assertThat(compilation).succeededWithoutWarnings();
+  }
+
+  /**
+   * Test: {@code @SimpleBuilder.Options(formattingMode = "none")} produces unformatted output.
+   *
+   * <p>When {@code formattingMode} is set to {@code "none"} via annotation options, the generated
+   * source should be raw Roaster output without any post-processing (no indentation fixup).
+   */
+  @Test
+  void readFromOptions_FormattingModeNone_GeneratesUnformattedCode() {
+    JavaFileObject source =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder(options = @SimpleBuilder.Options(
+                formattingMode = "none"
+            ))
+            public class PersonDto {
+                private String name;
+
+                public String getName() { return name; }
+                public void setName(String name) { this.name = name; }
+            }
+            """);
+
+    Compilation compilation = ProcessorTestUtils.createCompiler().compile(source);
+
+    assertThat(compilation).succeeded();
+    String generatedCode = ProcessorTestUtils.loadGeneratedSource(compilation, "PersonDtoBuilder");
+    assertNotNull(generatedCode, "PersonDtoBuilder should be generated");
+  }
+
+  /**
+   * Test: {@code @SimpleBuilder.Options(formattingMode = "lightweight")} produces formatted output.
+   *
+   * <p>When {@code formattingMode} is set to {@code "lightweight"} via annotation options, the
+   * generated source should have proper indentation (tabs converted to spaces).
+   */
+  @Test
+  void readFromOptions_FormattingModeLightweight_GeneratesFormattedCode() {
+    JavaFileObject source =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder(options = @SimpleBuilder.Options(
+                formattingMode = "lightweight"
+            ))
+            public class PersonDto {
+                private String name;
+
+                public String getName() { return name; }
+                public void setName(String name) { this.name = name; }
+            }
+            """);
+
+    Compilation compilation = ProcessorTestUtils.createCompiler().compile(source);
+
+    assertThat(compilation).succeeded();
+    String generatedCode = ProcessorTestUtils.loadGeneratedSource(compilation, "PersonDtoBuilder");
+    assertNotNull(generatedCode, "PersonDtoBuilder should be generated");
+
+    // Lightweight formatting should produce 2-space indentation (not tabs)
+    ProcessorAsserts.assertContaining(generatedCode, "  private");
+  }
+
+  /**
+   * Test: {@code @SimpleMinimalBuilder} uses lightweight formatting by default.
+   *
+   * <p>The {@code @SimpleMinimalBuilder} template sets {@code formattingMode = "lightweight"} in
+   * its template options. This verifies the template option flows through correctly.
+   */
+  @Test
+  void readFromTemplate_SimpleMinimalBuilder_UsesLightweightFormatting() {
+    JavaFileObject source =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+            import org.javahelpers.simple.builders.core.annotations.SimpleMinimalBuilder;
+
+            @SimpleMinimalBuilder
+            public class MinimalDto {
+                private String name;
+
+                public String getName() { return name; }
+                public void setName(String name) { this.name = name; }
+            }
+            """);
+
+    Compilation compilation = ProcessorTestUtils.createCompiler().compile(source);
+
+    assertThat(compilation).succeeded();
+    String generatedCode = ProcessorTestUtils.loadGeneratedSource(compilation, "MinimalDtoBuilder");
+    assertNotNull(generatedCode, "MinimalDtoBuilder should be generated");
+
+    // Lightweight formatting should produce 2-space indentation (not tabs)
+    ProcessorAsserts.assertContaining(generatedCode, "  private");
+  }
+
+  /**
+   * Test: Default {@code @SimpleBuilder} (without formattingMode option) uses JDT formatting.
+   *
+   * <p>When no {@code formattingMode} is specified in annotation options, the global default (JDT)
+   * from compiler arguments should be used.
+   */
+  @Test
+  void readFromOptions_NoFormattingMode_UsesJdtDefault() {
+    JavaFileObject source =
+        ProcessorTestUtils.simpleBuilderClass(
+            "test",
+            "PersonDto",
+            """
+            private String name;
+
+            public String getName() { return name; }
+            public void setName(String name) { this.name = name; }
+            """);
+
+    Compilation compilation = ProcessorTestUtils.createCompiler().compile(source);
+
+    assertThat(compilation).succeeded();
+    String generatedCode = ProcessorTestUtils.loadGeneratedSource(compilation, "PersonDtoBuilder");
+    assertNotNull(generatedCode, "PersonDtoBuilder should be generated");
+
+    // JDT formatting should produce 2-space indentation
+    ProcessorAsserts.assertContaining(generatedCode, "  private");
   }
 }

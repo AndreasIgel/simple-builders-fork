@@ -51,6 +51,9 @@ public class TypeName {
   /** Whether this type has an empty constructor. */
   private boolean hasEmptyConstructor = false;
 
+  /** Whether this type represents an enum. */
+  private boolean enumType = false;
+
   /**
    * Constructor for TypeName.
    *
@@ -155,6 +158,24 @@ public class TypeName {
    */
   public void setHasEmptyConstructor(boolean hasEmptyConstructor) {
     this.hasEmptyConstructor = hasEmptyConstructor;
+  }
+
+  /**
+   * Returns whether this type represents an enum.
+   *
+   * @return true if this type is an enum
+   */
+  public boolean isEnumType() {
+    return enumType;
+  }
+
+  /**
+   * Sets whether this type represents an enum.
+   *
+   * @param enumType true if this type is an enum
+   */
+  public void setEnumType(boolean enumType) {
+    this.enumType = enumType;
   }
 
   /**

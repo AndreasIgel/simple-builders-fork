@@ -19,7 +19,11 @@ Simple-builders supports fine-grained configuration through the `@SimpleBuilder.
   - [Collection Helpers](#collection-helpers)
   - [Component Filtering](#component-filtering)
   - [Integration](#integration)
+  - [Documentation](#documentation)
   - [Reliability](#reliability)
+  - [Debug Logging](#debug-logging)
+  - [Performance Tracking](#performance-tracking)
+  - [Performance Optimization](#performance-optimization)
 - [Examples](#examples)
   - [Minimal Builder](#minimal-builder)
   - [Internal API Builder](#internal-api-builder)
@@ -111,7 +115,8 @@ Create reusable configuration presets with custom template annotations. The buil
     usingBuilderImplementationAnnotation = OptionState.DISABLED,
     implementsBuilderBase = OptionState.DISABLED,
     usingJacksonDeserializerAnnotation = OptionState.DISABLED,
-    generateJacksonModule = OptionState.DISABLED
+    generateJacksonModule = OptionState.DISABLED,
+    generateJavaDoc = OptionState.DISABLED
 ))
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
@@ -857,6 +862,30 @@ This is highly recommended to ensure deterministic output location and avoid spl
 
 ---
 
+### Documentation
+
+#### `generateJavaDoc`
+
+**Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.generateJavaDoc=ENABLED|DISABLED`
+
+Controls whether the processor emits Javadoc comments on the generated builder class, its fields, constructors and methods.
+
+**When ENABLED** (default):
+The generated builder contains Javadoc blocks explaining the purpose of the class, setters, `build()`, `create()` and any helper methods.
+
+**When DISABLED**:
+No Javadoc is emitted. This produces smaller generated source files and is useful when generated code is committed to version control and Javadoc noise is undesirable.
+
+**Example**:
+```java
+@SimpleBuilder(options = @SimpleBuilder.Options(generateJavaDoc = OptionState.DISABLED))
+public class PersonDto {
+    private String name;
+}
+```
+
+---
+
 ### Naming
 
 #### `builderSuffix`
@@ -900,6 +929,120 @@ public class PersonDto {
 When enabled, builder and Jackson-module generation failures are promoted from compiler warnings
 to errors that fail the build. By default, strict mode is disabled and generation failures are
 reported as warnings so compilation can continue.
+
+---
+
+### Performance Tracking
+
+#### `performanceTracking`
+
+**Default**: `false` | **Compiler Option**: `-Asimplebuilder.performanceTracking=true|false`
+
+Enables performance tracking during annotation processing. When enabled, the processor measures
+execution times for each processing phase, method generator, builder enhancer, and per-class
+processing. A summary report is logged to the compiler output at the end of processing.
+
+**When enabled**: A hierarchical performance report is printed to the compiler log, including:
+- Total processing time and average time per class
+- Phase breakdown (Configuration Resolution, Builder Definition Extraction, DTO Mapping, Code Generation)
+- Top 20 slowest classes with field and collection counts
+- Top 5 slowest MethodGenerators and BuilderEnhancers
+
+**When disabled** (default): No performance tracking occurs. The `NoOpPerformanceTracker` is used,
+which has zero overhead as the JIT compiler eliminates all tracking calls.
+
+**Example**:
+```bash
+# Maven
+mvn compile -Dsimplebuilder.performanceTracking=true
+
+# Or via compiler arg
+-Asimplebuilder.performanceTracking=true
+```
+
+---
+
+#### `performanceOutputFile`
+
+**Default**: *(empty, no file output)* | **Compiler Option**: `-Asimplebuilder.performanceOutputFile=path/to/report.json`
+
+Specifies a file path where the performance report is written as structured JSON. This is useful
+for automated performance analysis and comparison across multiple runs.
+
+**When set**: In addition to the log output, a JSON file is written containing:
+- `timestamp` — ISO-8601 timestamp of the report
+- `totalClasses` — number of classes processed
+- `totalProcessingTimeNanos` / `totalProcessingTimeSeconds` — total processing time
+- `averagePerClassMs` — average processing time per class
+- `phaseBreakdown` — hierarchical phase timings with elapsed nanos, seconds, and percentages
+- `classMetrics` — per-class metrics (name, elapsed nanos/ms, field count, collection count), sorted by elapsed time descending
+- `generatorStats` — per-generator stats (name, elapsed nanos, call count, avg ms/call)
+- `enhancerStats` — per-enhancer stats (name, elapsed nanos, call count, avg ms/call)
+
+**When not set** (default): Only the log report is generated; no JSON file is written.
+
+**Example**:
+```bash
+# Maven
+mvn compile \
+  -Dsimplebuilder.performanceTracking=true \
+  -Dsimplebuilder.performanceOutputFile=target/performance-report.json
+
+# Or via compiler arg
+-Asimplebuilder.performanceTracking=true
+-Asimplebuilder.performanceOutputFile=target/performance-report.json
+```
+
+**Note**: `performanceTracking` must be enabled for `performanceOutputFile` to have any effect.
+
+---
+
+### Debug Logging
+
+#### `verbose`
+
+**Default**: `false` | **Compiler Option**: `-Asimplebuilder.verbose=true|false`
+
+> **Note**: This is a **processor-level option** only. It cannot be set per-annotation via
+> `@SimpleBuilder.Options`.
+
+Enables debug logging during annotation processing, providing detailed tracing of field discovery,
+method analysis, and code generation steps. See [DEBUG_LOGGING.md](DEBUG_LOGGING.md) for detailed
+information on log levels, output format, and configuration examples.
+
+---
+
+### Performance Optimization
+
+#### `formattingMode`
+
+**Default**: `jdt` | **Compiler Option**: `-Asimplebuilder.formattingMode=JDT|LIGHTWEIGHT|NONE`
+| **Annotation Option**: `@SimpleBuilder.Options(formattingMode = "lightweight")`
+
+Controls how generated source code is post-processed before being written to disk:
+
+| Mode | Description | Trade-offs |
+|------|-------------|------------|
+| `JDT` (default) | Full Eclipse JDT formatter | Highest quality; slowest (~40% of generation time) |
+| `LIGHTWEIGHT` | Minimal cosmetic fixes (tabs→spaces, blank line collapse, javadoc prefixes) | Fast; no line wrapping or import ordering |
+| `NONE` | Raw Roaster output, no post-processing | Fastest; no indentation, not suitable for committed code |
+
+**Example**:
+```bash
+# Maven
+mvn compile -Dsimplebuilder.formattingMode=lightweight
+
+# Or via compiler arg
+-Asimplebuilder.formattingMode=lightweight
+```
+
+Per-annotation override:
+```java
+@SimpleBuilder(options = @SimpleBuilder.Options(
+    formattingMode = "lightweight"
+))
+public class PersonDto { ... }
+```
 
 ## Examples
 
@@ -1003,7 +1146,8 @@ The built-in `@SimpleMinimalBuilder` is the simplest way to get a lightweight bu
     usingBuilderImplementationAnnotation = OptionState.DISABLED,
     implementsBuilderBase = OptionState.DISABLED,
     usingJacksonDeserializerAnnotation = OptionState.DISABLED,
-    generateJacksonModule = OptionState.DISABLED
+    generateJacksonModule = OptionState.DISABLED,
+    generateJavaDoc = OptionState.DISABLED
 ))
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
@@ -1254,6 +1398,7 @@ methodAccess = AccessModifier.PRIVATE
 -Asimplebuilder.generateStringFormatHelpers=ENABLED|DISABLED
 -Asimplebuilder.generateAddToCollectionHelpers=ENABLED|DISABLED
 -Asimplebuilder.generateUnboxedOptional=ENABLED|DISABLED
+-Asimplebuilder.copyTypeAnnotations=ENABLED|DISABLED
 
 # Collection Helpers
 -Asimplebuilder.usingArrayListBuilder=ENABLED|DISABLED
@@ -1270,6 +1415,12 @@ methodAccess = AccessModifier.PRIVATE
 -Asimplebuilder.implementsBuilderBase=ENABLED|DISABLED
 -Asimplebuilder.usingGeneratedAnnotation=ENABLED|DISABLED
 -Asimplebuilder.usingBuilderImplementationAnnotation=ENABLED|DISABLED
+-Asimplebuilder.usingJacksonDeserializerAnnotation=ENABLED|DISABLED
+-Asimplebuilder.generateJacksonModule=ENABLED|DISABLED
+-Asimplebuilder.jacksonModulePackage=com.your.package
+
+# Documentation
+-Asimplebuilder.generateJavaDoc=ENABLED|DISABLED
 
 # Naming
 -Asimplebuilder.builderSuffix=CustomSuffix
@@ -1277,6 +1428,16 @@ methodAccess = AccessModifier.PRIVATE
 
 # Reliability
 -Asimplebuilder.strict=ENABLED|DISABLED
+
+# Debug Logging
+-Asimplebuilder.verbose=true|false
+
+# Performance Tracking
+-Asimplebuilder.performanceTracking=true|false
+-Asimplebuilder.performanceOutputFile=path/to/report.json
+
+# Performance Optimization
+-Asimplebuilder.formattingMode=JDT|LIGHTWEIGHT|NONE
 ```
 
 ### Complete Options Example
@@ -1315,7 +1476,10 @@ methodAccess = AccessModifier.PRIVATE
     usingGeneratedAnnotation = OptionState.ENABLED,
     usingBuilderImplementationAnnotation = OptionState.ENABLED,
     usingJacksonDeserializerAnnotation = OptionState.ENABLED,
-    
+
+    // Documentation
+    generateJavaDoc = OptionState.ENABLED,
+
     // Naming
     builderSuffix = "Builder",
     setterSuffix = ""

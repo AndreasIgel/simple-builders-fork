@@ -84,108 +84,34 @@ class SimpleMinimalBuilderTest {
         import org.javahelpers.simple.builders.core.util.BuilderToStringStyle;
         import org.javahelpers.simple.builders.core.util.TrackedValue;
 
-        /**
-         * Builder for {@code test.PersonDto}.
-         * <p>
-         * This builder provides a fluent API for creating instances of test.PersonDto with method chaining and validation. Use
-         * the static {@code create()} method to obtain a new builder instance, configure the desired properties using the
-         * setter methods, and then call {@code build()} to create the final DTO.
-         *
-         * <h4>Example:</h4>
-         *
-         * <pre>{@code
-         * PersonDto result = PersonDtoBuilder.create().name("example value").tags(List.of("example value")).build();
-         * }</pre>
-         */
         public class PersonDtoBuilder {
 
-          /**
-           * Tracked value for <code>name</code>: name.
-           */
           private TrackedValue<String> name = unsetValue();
-          /**
-           * Tracked value for <code>tags</code>: tags.
-           */
+
           private TrackedValue<List<String>> tags = unsetValue();
 
-          /**
-           * Empty constructor of builder for {@code test.PersonDto}.
-           */
           public PersonDtoBuilder() {
           }
 
-          /**
-           * Initialisation of builder for {@code test.PersonDto} by a instance.
-           *
-           * @param instance object instance for initialisiation
-           */
           public PersonDtoBuilder(PersonDto instance) {
             this.name = initialValue(instance.getName());
             this.tags = initialValue(instance.getTags());
           }
 
-          /**
-           * Creating a new builder for {@code test.PersonDto}.
-           *
-           * <h4>Example:</h4>
-           *
-           * <pre>{@code
-           * PersonDtoBuilder builder = PersonDtoBuilder.create();
-           * }</pre>
-           *
-           * @return builder for {@code test.PersonDto}
-           */
           public static PersonDtoBuilder create() {
             return new PersonDtoBuilder();
           }
 
-          /**
-           * Sets the value for <code>name</code>.
-           * <p>
-           * Generated from setter {@link PersonDto#setName(String) setName(String name)}
-           *
-           * <h4>Example:</h4>
-           *
-           * <pre>{@code
-           * builder.name("example value");
-           * }</pre>
-           *
-           * @param name name
-           * @return current instance of builder
-           */
           public PersonDtoBuilder name(String name) {
             this.name = changedValue(name);
             return this;
           }
 
-          /**
-           * Sets the value for <code>tags</code>.
-           * <p>
-           * Generated from setter {@link PersonDto#setTags(List) setTags(List<String> tags)}
-           *
-           * <h4>Example:</h4>
-           *
-           * <pre>{@code
-           * builder.tags(List.of("example value"));
-           * }</pre>
-           *
-           * @param tags tags
-           * @return current instance of builder
-           */
           public PersonDtoBuilder tags(List<String> tags) {
             this.tags = changedValue(tags);
             return this;
           }
 
-          /**
-           * Builds the configured DTO instance.
-           *
-           * <h4>Example:</h4>
-           *
-           * <pre>{@code
-           * PersonDto result = builder.build();
-           * }</pre>
-           */
           public PersonDto build() {
             PersonDto result = new PersonDto();
             this.name.ifSet(result::setName);
@@ -193,11 +119,6 @@ class SimpleMinimalBuilderTest {
             return result;
           }
 
-          /**
-           * Returns a string representation of this builder, including only fields that have been set.
-           *
-           * @return string representation of the builder
-           */
           @Override
           public String toString() {
             return new ToStringBuilder(this, BuilderToStringStyle.INSTANCE).append("name", this.name)
