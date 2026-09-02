@@ -151,12 +151,12 @@ public final class ProcessingContext {
    *
    * @return the builder scope resolver
    */
-   public BuilderScopeResolver getBuilderScopeResolver() {
+  public BuilderScopeResolver getBuilderScopeResolver() {
     if (builderScopeResolver == null) {
       builderScopeResolver = new BuilderScopeResolver(this);
     }
     return builderScopeResolver;
-   }
+  }
 
   /**
    * Get the TypeElement for a given qualified class name.

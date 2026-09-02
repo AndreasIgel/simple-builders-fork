@@ -681,6 +681,11 @@ the usage scope but outside the generation scope, the processor verifies that it
 actually exists on the classpath before emitting a builder reference. If it cannot be
 resolved, the field falls back to a plain setter.
 
+The `example` module contains a runnable demo in package
+`org.javahelpers.simple.builders.example.scoping` ([`ScopedOwnerDto.java`](../example/src/main/java/org/javahelpers/simple/builders/example/scoping/ScopedOwnerDto.java)).
+It demonstrates a generation-scope builder consumer, a usage-scope missing-builder fallback, and
+an out-of-scope plain setter in [`ScopedOwnerDtoBuilder.java`](../example/generated-example-builder/org/javahelpers/simple/builders/example/scoping/ScopedOwnerDtoBuilder.java).
+
 ### Component Filtering
 
 #### `deactivateGenerationComponents`
