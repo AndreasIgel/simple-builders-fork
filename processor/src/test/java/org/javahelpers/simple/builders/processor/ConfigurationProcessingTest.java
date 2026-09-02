@@ -89,6 +89,9 @@ class ConfigurationProcessingTest {
             .setterSuffix("")
             // Formatting
             .formattingMode("lightweight")
+            // Builder scoping
+            .builderGenerationPackages("a.b")
+            .builderUsagePackages("c.d")
             .build();
 
     // Verify all options are accessible (this will fail to compile if accessors are missing)
@@ -119,6 +122,8 @@ class ConfigurationProcessingTest {
     assertEquals("Builder", config.getBuilderSuffix());
     assertEquals("", config.getSetterSuffix());
     assertEquals("lightweight", config.formattingMode());
+    assertEquals("a.b", config.getBuilderGenerationPackages());
+    assertEquals("c.d", config.getBuilderUsagePackages());
   }
 
   /**
@@ -239,8 +244,10 @@ class ConfigurationProcessingTest {
         generatedCode,
         "public MinimalDtoCustomBuilder withName(Supplier<String> nameSupplier)",
         "public MinimalDtoCustomBuilder withItems(Supplier<List<String>> itemsSupplier)",
-        "public MinimalDtoCustomBuilder withProperties(Supplier<Map<String, Integer>> propertiesSupplier)",
-        "public MinimalDtoCustomBuilder withDescription(Supplier<Optional<String>> descriptionSupplier)",
+        "public MinimalDtoCustomBuilder withProperties(Supplier<Map<String, Integer>>"
+            + " propertiesSupplier)",
+        "public MinimalDtoCustomBuilder withDescription(Supplier<Optional<String>>"
+            + " descriptionSupplier)",
         "public MinimalDtoCustomBuilder withTags(Supplier<Set<String>> tagsSupplier)",
         "public MinimalDtoCustomBuilder withNested(Supplier<NestedDto> nestedSupplier)",
         "public MinimalDtoCustomBuilder withAddress(Supplier<Address> addressSupplier)");
@@ -253,15 +260,19 @@ class ConfigurationProcessingTest {
         "public MinimalDtoCustomBuilder withNested(Consumer<NestedDto> nestedConsumer)",
         "public MinimalDtoCustomBuilder withItems(Consumer<List<String>> itemsConsumer)",
         "public MinimalDtoCustomBuilder withTags(Consumer<Set<String>> tagsConsumer)",
-        "public MinimalDtoCustomBuilder withProperties(Consumer<Map<String, Integer>> propertiesConsumer)");
+        "public MinimalDtoCustomBuilder withProperties(Consumer<Map<String, Integer>>"
+            + " propertiesConsumer)");
 
     // With generateBuilderConsumer=false, NO builder consumer methods should be generated
     // Builder consumers include: StringBuilder, collection builders, nested DTO builders
     ProcessorAsserts.assertNotContaining(
         generatedCode,
-        "public MinimalDtoCustomBuilder withNested(Consumer<NestedDtoBuilder> nestedBuilderConsumer)",
-        "public MinimalDtoCustomBuilder withName(Consumer<StringBuilder> nameStringBuilderConsumer)",
-        "public MinimalDtoCustomBuilder withDescription(Consumer<StringBuilder> descriptionStringBuilderConsumer)");
+        "public MinimalDtoCustomBuilder withNested(Consumer<NestedDtoBuilder>"
+            + " nestedBuilderConsumer)",
+        "public MinimalDtoCustomBuilder withName(Consumer<StringBuilder>"
+            + " nameStringBuilderConsumer)",
+        "public MinimalDtoCustomBuilder withDescription(Consumer<StringBuilder>"
+            + " descriptionStringBuilderConsumer)");
 
     // With generateConditionalHelper=false, NO conditional methods
     ProcessorAsserts.assertNotContaining(
@@ -325,7 +336,8 @@ class ConfigurationProcessingTest {
     // should be used
     ProcessorAsserts.assertNotContaining(
         generatedCode,
-        "MinimalDtoCustomBuilder withItems(Consumer<ArrayListBuilder<String>> itemsBuilderConsumer)");
+        "MinimalDtoCustomBuilder withItems(Consumer<ArrayListBuilder<String>>"
+            + " itemsBuilderConsumer)");
 
     // With usingHashSetBuilder=false AND generateBuilderConsumer=false, NO HashSetBuilder should be
     // used
@@ -337,7 +349,8 @@ class ConfigurationProcessingTest {
     // used
     ProcessorAsserts.assertNotContaining(
         generatedCode,
-        "MinimalDtoCustomBuilder withProperties(Consumer<HashMapBuilder<String, Integer>> propertiesBuilderConsumer)");
+        "MinimalDtoCustomBuilder withProperties(Consumer<HashMapBuilder<String, Integer>>"
+            + " propertiesBuilderConsumer)");
 
     // Still generates: basic setters and build method
     // With setterSuffix="with", all setter methods should be prefixed with "with" and capitalized
@@ -511,6 +524,8 @@ class ConfigurationProcessingTest {
             .generateConsumer(OptionState.ENABLED)
             .builderAccess(AccessModifier.PUBLIC)
             .setterSuffix("")
+            .builderGenerationPackages("base.pkg")
+            .builderUsagePackages("base.lib")
             .build();
 
     // When: Merge with override configuration
@@ -519,6 +534,7 @@ class ConfigurationProcessingTest {
             .generateSupplier(OptionState.DISABLED) // Override
             .generateBuilderConsumer(OptionState.DISABLED) // New value
             .setterSuffix("with") // Override setterSuffix
+            .builderGenerationPackages("override.pkg")
             // generateConsumer not set, should keep base value
             .build();
 
@@ -540,6 +556,8 @@ class ConfigurationProcessingTest {
         merged.getBuilderAccess(),
         "Base value should be kept when override is DEFAULT");
     assertEquals("with", merged.getSetterSuffix(), "Override should win for setterSuffix");
+    assertEquals("override.pkg", merged.getBuilderGenerationPackages());
+    assertEquals("base.lib", merged.getBuilderUsagePackages());
   }
 
   /** Merge logic test for formattingMode: Annotation value must override compiler arg default. */

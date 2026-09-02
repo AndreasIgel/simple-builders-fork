@@ -75,6 +75,8 @@ class BuilderConfigurationReaderTest {
                 generateFieldSupplier = OptionState.DISABLED,
                 generateFieldConsumer = OptionState.DISABLED,
                 generateBuilderConsumer = OptionState.DISABLED,
+                builderGenerationPackages = "test",
+                builderUsagePackages = "test",
                 generateVarArgsHelpers = OptionState.DISABLED,
                 builderAccess = AccessModifier.PACKAGE_PRIVATE,
                 methodAccess = AccessModifier.PACKAGE_PRIVATE,

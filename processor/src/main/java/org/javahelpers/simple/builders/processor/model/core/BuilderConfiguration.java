@@ -27,6 +27,10 @@ package org.javahelpers.simple.builders.processor.model.core;
 import static org.javahelpers.simple.builders.core.enums.AccessModifier.*;
 import static org.javahelpers.simple.builders.core.enums.OptionState.*;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -64,6 +68,8 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  * @param implementsBuilderBase Implement IBuilderBase interface
  * @param generateWithInterface Generate With interface
  * @param generateJavaDoc Generate Javadoc comments
+ * @param builderGenerationPackages Packages for which builders are generated (empty = unscoped)
+ * @param builderUsagePackages Packages whose builders may be used as helpers (empty = unscoped)
  * @param builderSuffix Suffix for builder class name
  * @param setterSuffix Suffix for setter method names
  * @param formattingMode Formatting mode for generated source code (null = inherit from compiler
@@ -96,6 +102,8 @@ public record BuilderConfiguration(
     OptionState generateJacksonModule,
     OptionState generateJavaDoc,
     String jacksonModulePackage,
+    String builderGenerationPackages,
+    String builderUsagePackages,
     String builderSuffix,
     String setterSuffix,
     String formattingMode,
@@ -128,6 +136,8 @@ public record BuilderConfiguration(
           .generateJacksonModule(DISABLED)
           .generateJavaDoc(ENABLED)
           .jacksonModulePackage(null)
+          .builderGenerationPackages(null)
+          .builderUsagePackages(null)
           .builderSuffix("Builder")
           .setterSuffix("")
           .formattingMode(FormattingMode.JDT.getOptionValue())
@@ -236,6 +246,80 @@ public record BuilderConfiguration(
     return jacksonModulePackage;
   }
 
+  public String getBuilderGenerationPackages() {
+    return builderGenerationPackages;
+  }
+
+  public String getBuilderUsagePackages() {
+    return builderUsagePackages;
+  }
+
+  /**
+   * Returns the parsed set of builder generation package scopes.
+   *
+   * @return set of package names and their subpackages, empty if unset
+   */
+  public Set<String> getBuilderGenerationPackagesSet() {
+    return parsePackageList(builderGenerationPackages);
+  }
+
+  /**
+   * Returns the parsed set of builder usage package scopes.
+   *
+   * @return set of package names and their subpackages, empty if unset
+   */
+  public Set<String> getBuilderUsagePackagesSet() {
+    return parsePackageList(builderUsagePackages);
+  }
+
+  /**
+   * Checks whether the given package is within the builder generation scope.
+   *
+   * @param packageName the package to check
+   * @return true if the package equals or is a subpackage of a configured generation package
+   */
+  public boolean isInGenerationScope(String packageName) {
+    return isInScope(packageName, getBuilderGenerationPackagesSet());
+  }
+
+  /**
+   * Checks whether the given package is within the builder usage scope.
+   *
+   * @param packageName the package to check
+   * @return true if the package equals or is a subpackage of a configured usage package
+   */
+  public boolean isInUsageScope(String packageName) {
+    return isInScope(packageName, getBuilderUsagePackagesSet());
+  }
+
+  /**
+   * Checks whether the given package is within any configured package scope.
+   *
+   * <p>A package matches when it equals a configured scope or is one of its subpackages.
+   *
+   * @param packageName the package to check
+   * @param packageScopes the configured package scopes
+   * @return true if the package is within one of the configured scopes
+   */
+  public static boolean isInScope(String packageName, Set<String> packageScopes) {
+    for (String scope : packageScopes) {
+      if (packageName.equals(scope) || packageName.startsWith(scope + ".")) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static Set<String> parsePackageList(String value) {
+    if (StringUtils.isBlank(value)) {
+      return new HashSet<>();
+    }
+    return Arrays.stream(StringUtils.split(value, ","))
+        .map(String::trim)
+        .filter(s -> !s.isEmpty())
+        .collect(Collectors.toCollection(HashSet::new));
+  }
+
   public String getBuilderSuffix() {
     return builderSuffix;
   }
@@ -317,6 +401,9 @@ public record BuilderConfiguration(
             mergeOptionState(other.generateJacksonModule, this.generateJacksonModule))
         .generateJavaDoc(mergeOptionState(other.generateJavaDoc, this.generateJavaDoc))
         .jacksonModulePackage(mergeString(other.jacksonModulePackage, this.jacksonModulePackage))
+        .builderGenerationPackages(
+            mergeString(other.builderGenerationPackages, this.builderGenerationPackages))
+        .builderUsagePackages(mergeString(other.builderUsagePackages, this.builderUsagePackages))
         .builderSuffix(mergeString(other.builderSuffix, this.builderSuffix))
         .setterSuffix(mergeString(other.setterSuffix, this.setterSuffix))
         .formattingMode(mergeString(other.formattingMode, this.formattingMode))
@@ -385,6 +472,8 @@ public record BuilderConfiguration(
         .appendValueIfSet("generateJacksonModule", generateJacksonModule)
         .appendValueIfSet("generateJavaDoc", generateJavaDoc)
         .appendIfNotEmpty("jacksonModulePackage", jacksonModulePackage)
+        .appendIfNotEmpty("builderGenerationPackages", builderGenerationPackages)
+        .appendIfNotEmpty("builderUsagePackages", builderUsagePackages)
         .appendIfNotEmpty("builderSuffix", builderSuffix)
         .appendIfNotEmpty("setterSuffix", setterSuffix)
         .appendIfNotEmpty("formattingMode", formattingMode)
@@ -473,6 +562,10 @@ public record BuilderConfiguration(
     // === Formatting ===
     private String formattingMode = null;
 
+    // === Builder Scoping ===
+    private String builderGenerationPackages = null;
+    private String builderUsagePackages = null;
+
     // === Error Handling ===
     private OptionState strict = OptionState.UNSET;
 
@@ -559,6 +652,16 @@ public record BuilderConfiguration(
 
     public Builder jacksonModulePackage(String value) {
       this.jacksonModulePackage = StringUtils.trimToNull(value);
+      return this;
+    }
+
+    public Builder builderGenerationPackages(String value) {
+      this.builderGenerationPackages = StringUtils.trimToNull(value);
+      return this;
+    }
+
+    public Builder builderUsagePackages(String value) {
+      this.builderUsagePackages = StringUtils.trimToNull(value);
       return this;
     }
 
@@ -774,6 +877,8 @@ public record BuilderConfiguration(
           generateJacksonModule,
           generateJavaDoc,
           jacksonModulePackage,
+          builderGenerationPackages,
+          builderUsagePackages,
           builderSuffix,
           setterSuffix,
           formattingMode,

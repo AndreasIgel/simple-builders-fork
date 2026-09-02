@@ -336,6 +336,8 @@ class CompilerArgumentsReaderTest {
     assertEquals(AccessModifier.DEFAULT, config.getMethodAccess());
     assertNull(config.getBuilderSuffix(), "Builder suffix should be null when not set");
     assertNull(config.getSetterSuffix(), "Setter suffix should be null when not set");
+    assertNull(config.getBuilderGenerationPackages());
+    assertNull(config.getBuilderUsagePackages());
   }
 
   /** Test: readBuilderConfiguration reads all options correctly. */
@@ -353,6 +355,8 @@ class CompilerArgumentsReaderTest {
             .put("simplebuilder.copyTypeAnnotations", "enabled")
             .put("simplebuilder.builderSuffix", "Factory")
             .put("simplebuilder.setterSuffix", "with")
+            .put("simplebuilder.builderGenerationPackages", "a.b, c.d")
+            .put("simplebuilder.builderUsagePackages", "x.y")
             .build();
     CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
 
@@ -368,6 +372,8 @@ class CompilerArgumentsReaderTest {
     assertEquals(OptionState.ENABLED, config.copyTypeAnnotations());
     assertEquals("Factory", config.getBuilderSuffix());
     assertEquals("with", config.getSetterSuffix());
+    assertEquals("a.b, c.d", config.getBuilderGenerationPackages());
+    assertEquals("x.y", config.getBuilderUsagePackages());
   }
 
   /** Test: readBuilderConfiguration handles mixed valid and invalid values. */

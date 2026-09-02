@@ -17,6 +17,7 @@ Simple-builders supports fine-grained configuration through the `@SimpleBuilder.
   - [Conditional Logic](#conditional-logic)
   - [Access Control](#access-control)
   - [Collection Helpers](#collection-helpers)
+  - [Builder Scoping](#builder-scoping)
   - [Component Filtering](#component-filtering)
   - [Integration](#integration)
   - [Documentation](#documentation)
@@ -656,6 +657,34 @@ public TeamDtoBuilder uniqueMembers(Consumer<HashSetBuilderWithElementBuilders<P
 Generates methods using `HashMapBuilder` for fluent Map construction.
 
 ---
+
+### Builder Scoping
+
+#### `builderGenerationPackages`
+
+**Default**: `""` (empty, unchanged behavior) | **Compiler Option**:
+`-Asimplebuilder.builderGenerationPackages=package1,package2`
+
+Restricts builder generation to annotated DTOs in the listed packages. Packages are
+comma-separated, and each listed package includes all of its subpackages. Types in the
+generation scope are trusted to have their builders generated in the current compilation,
+so references to their builders do not require a type search.
+
+#### `builderUsagePackages`
+
+**Default**: `""` (empty, unchanged behavior) | **Compiler Option**:
+`-Asimplebuilder.builderUsagePackages=package1,package2`
+
+Controls which packages may provide builders as nested builder helpers. Packages are
+comma-separated, and each listed package includes all of its subpackages. For a type in
+the usage scope but outside the generation scope, the processor verifies that its builder
+actually exists on the classpath before emitting a builder reference. If it cannot be
+resolved, the field falls back to a plain setter.
+
+The `example` module contains a runnable demo in package
+`org.javahelpers.simple.builders.example.scoping` ([`ScopedOwnerDto.java`](../example/src/main/java/org/javahelpers/simple/builders/example/scoping/ScopedOwnerDto.java)).
+It demonstrates a generation-scope builder consumer, a usage-scope missing-builder fallback, and
+an out-of-scope plain setter in [`ScopedOwnerDtoBuilder.java`](../example/generated-example-builder/org/javahelpers/simple/builders/example/scoping/ScopedOwnerDtoBuilder.java).
 
 ### Component Filtering
 
@@ -1410,6 +1439,10 @@ methodAccess = AccessModifier.PRIVATE
 # Component Filtering
 -Asimplebuilder.deactivateGenerationComponents=pattern1,pattern2,...
 
+# Builder Scoping
+-Asimplebuilder.builderGenerationPackages=package1,package2
+-Asimplebuilder.builderUsagePackages=package1,package2
+
 # Integration & Annotations
 -Asimplebuilder.generateWithInterface=ENABLED|DISABLED
 -Asimplebuilder.implementsBuilderBase=ENABLED|DISABLED
@@ -1469,6 +1502,10 @@ methodAccess = AccessModifier.PRIVATE
     usingHashSetBuilder = OptionState.ENABLED,
     usingHashSetBuilderWithElementBuilders = OptionState.ENABLED,
     usingHashMapBuilder = OptionState.ENABLED,
+
+    // Builder Scoping
+    builderGenerationPackages = "com.example.dto",
+    builderUsagePackages = "com.example.library",
     
     // Integration & Annotations
     generateWithInterface = OptionState.ENABLED,

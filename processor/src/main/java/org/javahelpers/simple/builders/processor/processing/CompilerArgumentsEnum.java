@@ -119,6 +119,13 @@ public enum CompilerArgumentsEnum {
   /** Option for Jackson Module package name. */
   JACKSON_MODULE_PACKAGE("jacksonModulePackage"),
 
+  // === Builder Scoping ===
+  /** Option for builder generation packages. */
+  BUILDER_GENERATION_PACKAGES("builderGenerationPackages"),
+
+  /** Option for builder usage packages. */
+  BUILDER_USAGE_PACKAGES("builderUsagePackages"),
+
   // === Naming ===
   /** Option for builder class name suffix. */
   BUILDER_SUFFIX("builderSuffix"),
