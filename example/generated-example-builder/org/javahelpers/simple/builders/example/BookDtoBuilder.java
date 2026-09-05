@@ -27,41 +27,41 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  * <pre>{@code
  * BookDto result = BookDtoBuilder.create()
  *     .author("example value")
- *     .mapAuthor(value -> value)
+ *     .mapAuthor(String::trim)
  *     .available(true)
- *     .mapAvailable(value -> value)
+ *     .mapAvailable(value -> !value)
  *     .category('x')
- *     .mapCategory(value -> value)
+ *     .mapCategory(Character::toUpperCase)
  *     .discount(3.14f)
- *     .mapDiscount(value -> value)
+ *     .mapDiscount(value -> value * 2)
  *     .mapEdition(value -> value)
  *     .exactPrice(BigDecimal.valueOf(3.14))
- *     .mapExactPrice(value -> value)
+ *     .mapExactPrice(value -> value.add(BigDecimal.ONE))
  *     .genres(Set.of("example value"))
  *     .mapGenres(value -> value)
  *     .isbn("example value")
- *     .mapIsbn(value -> value)
+ *     .mapIsbn(String::trim)
  *     .lastUpdated(LocalDateTime.now())
- *     .mapLastUpdated(value -> value)
+ *     .mapLastUpdated(value -> value.plusHours(1))
  *     .metadata(Map.of("example value", "example value"))
  *     .mapMetadata(value -> value)
  *     .pages(42)
- *     .mapPages(value -> value)
+ *     .mapPages(value -> value * 2)
  *     .price(3.14)
- *     .mapPrice(value -> value)
+ *     .mapPrice(value -> value * 2)
  *     .publishDate(LocalDate.now())
- *     .mapPublishDate(value -> value)
+ *     .mapPublishDate(value -> value.plusDays(1))
  *     .publisher(PersonDtoBuilder.create().build())
  *     .mapPublisher(value -> value)
  *     .mapRating(value -> value)
  *     .salesCount(42L)
- *     .mapSalesCount(value -> value)
+ *     .mapSalesCount(value -> value * 2)
  *     .subtitle(Optional.of("example value"))
  *     .mapSubtitle(value -> value)
  *     .tags(List.of("example value"))
  *     .mapTags(value -> value)
  *     .title("example value")
- *     .mapTitle(value -> value)
+ *     .mapTitle(String::trim)
  *     .build();
  * }</pre>
  */
@@ -361,14 +361,15 @@ public class BookDtoBuilder {
    * Transforms the current value of <code>author</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
    * <p>
    * Generated from setter {@link BookDto#setAuthor(String) setAuthor(String author)}
    * 
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.mapAuthor(value -> value);
+   * builder.mapAuthor(String::trim);
    * }</pre>
    * 
    * @param authorMapper operator applied to the current value; its result becomes the new value
@@ -387,14 +388,15 @@ public class BookDtoBuilder {
    * Transforms the current value of <code>available</code> in place by applying the given operator, instead of reading
    * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
    * <p>
    * Generated from setter {@link BookDto#setAvailable(boolean) setAvailable(boolean available)}
    * 
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.mapAvailable(value -> value);
+   * builder.mapAvailable(value -> !value);
    * }</pre>
    * 
    * @param availableMapper operator applied to the current value; its result becomes the new value
@@ -413,14 +415,15 @@ public class BookDtoBuilder {
    * Transforms the current value of <code>category</code> in place by applying the given operator, instead of reading
    * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
    * <p>
    * Generated from setter {@link BookDto#setCategory(char) setCategory(char category)}
    * 
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.mapCategory(value -> value);
+   * builder.mapCategory(Character::toUpperCase);
    * }</pre>
    * 
    * @param categoryMapper operator applied to the current value; its result becomes the new value
@@ -439,14 +442,15 @@ public class BookDtoBuilder {
    * Transforms the current value of <code>discount</code> in place by applying the given operator, instead of reading
    * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
    * <p>
    * Generated from setter {@link BookDto#setDiscount(float) setDiscount(float discount)}
    * 
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.mapDiscount(value -> value);
+   * builder.mapDiscount(value -> value * 2);
    * }</pre>
    * 
    * @param discountMapper operator applied to the current value; its result becomes the new value
@@ -465,7 +469,8 @@ public class BookDtoBuilder {
    * Transforms the current value of <code>edition</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
    * <p>
    * Generated from setter {@link BookDto#setEdition(short) setEdition(short edition)}
    * 
@@ -491,14 +496,15 @@ public class BookDtoBuilder {
    * Transforms the current value of <code>exactPrice</code> in place by applying the given operator, instead of reading
    * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
    * <p>
    * Generated from setter {@link BookDto#setExactPrice(BigDecimal) setExactPrice(BigDecimal exactPrice)}
    * 
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.mapExactPrice(value -> value);
+   * builder.mapExactPrice(value -> value.add(BigDecimal.ONE));
    * }</pre>
    * 
    * @param exactPriceMapper operator applied to the current value; its result becomes the new value
@@ -517,7 +523,8 @@ public class BookDtoBuilder {
    * Transforms the current value of <code>genres</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
    * <p>
    * Generated from setter {@link BookDto#setGenres(Set) setGenres(Set<String> genres)}
    * 
@@ -543,14 +550,15 @@ public class BookDtoBuilder {
    * Transforms the current value of <code>isbn</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
    * <p>
    * Generated from setter {@link BookDto#setIsbn(String) setIsbn(String isbn)}
    * 
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.mapIsbn(value -> value);
+   * builder.mapIsbn(String::trim);
    * }</pre>
    * 
    * @param isbnMapper operator applied to the current value; its result becomes the new value
@@ -569,14 +577,15 @@ public class BookDtoBuilder {
    * Transforms the current value of <code>lastUpdated</code> in place by applying the given operator, instead of
    * reading it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g.
    * trimming, upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify
-   * flow. The value must have been set before (directly or via an existing instance).
+   * flow. The value must have been set before (directly or via an existing instance). A <code>null</code> result is
+   * stored as-is and validated by <code>build()</code> like any other value.
    * <p>
    * Generated from setter {@link BookDto#setLastUpdated(LocalDateTime) setLastUpdated(LocalDateTime lastUpdated)}
    * 
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.mapLastUpdated(value -> value);
+   * builder.mapLastUpdated(value -> value.plusHours(1));
    * }</pre>
    * 
    * @param lastUpdatedMapper operator applied to the current value; its result becomes the new value
@@ -595,7 +604,8 @@ public class BookDtoBuilder {
    * Transforms the current value of <code>metadata</code> in place by applying the given operator, instead of reading
    * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
    * <p>
    * Generated from setter {@link BookDto#setMetadata(Map) setMetadata(Map<String, String> metadata)}
    * 
@@ -621,14 +631,15 @@ public class BookDtoBuilder {
    * Transforms the current value of <code>pages</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
    * <p>
    * Generated from setter {@link BookDto#setPages(int) setPages(int pages)}
    * 
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.mapPages(value -> value);
+   * builder.mapPages(value -> value * 2);
    * }</pre>
    * 
    * @param pagesMapper operator applied to the current value; its result becomes the new value
@@ -647,14 +658,15 @@ public class BookDtoBuilder {
    * Transforms the current value of <code>price</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
    * <p>
    * Generated from setter {@link BookDto#setPrice(double) setPrice(double price)}
    * 
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.mapPrice(value -> value);
+   * builder.mapPrice(value -> value * 2);
    * }</pre>
    * 
    * @param priceMapper operator applied to the current value; its result becomes the new value
@@ -673,14 +685,15 @@ public class BookDtoBuilder {
    * Transforms the current value of <code>publishDate</code> in place by applying the given operator, instead of
    * reading it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g.
    * trimming, upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify
-   * flow. The value must have been set before (directly or via an existing instance).
+   * flow. The value must have been set before (directly or via an existing instance). A <code>null</code> result is
+   * stored as-is and validated by <code>build()</code> like any other value.
    * <p>
    * Generated from setter {@link BookDto#setPublishDate(LocalDate) setPublishDate(LocalDate publishDate)}
    * 
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.mapPublishDate(value -> value);
+   * builder.mapPublishDate(value -> value.plusDays(1));
    * }</pre>
    * 
    * @param publishDateMapper operator applied to the current value; its result becomes the new value
@@ -699,7 +712,8 @@ public class BookDtoBuilder {
    * Transforms the current value of <code>publisher</code> in place by applying the given operator, instead of reading
    * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
    * <p>
    * Generated from setter {@link BookDto#setPublisher(PersonDto) setPublisher(PersonDto publisher)}
    * 
@@ -725,7 +739,8 @@ public class BookDtoBuilder {
    * Transforms the current value of <code>rating</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
    * <p>
    * Generated from setter {@link BookDto#setRating(byte) setRating(byte rating)}
    * 
@@ -751,14 +766,15 @@ public class BookDtoBuilder {
    * Transforms the current value of <code>salesCount</code> in place by applying the given operator, instead of reading
    * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
    * <p>
    * Generated from setter {@link BookDto#setSalesCount(long) setSalesCount(long salesCount)}
    * 
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.mapSalesCount(value -> value);
+   * builder.mapSalesCount(value -> value * 2);
    * }</pre>
    * 
    * @param salesCountMapper operator applied to the current value; its result becomes the new value
@@ -777,7 +793,8 @@ public class BookDtoBuilder {
    * Transforms the current value of <code>subtitle</code> in place by applying the given operator, instead of reading
    * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
    * <p>
    * Generated from setter {@link BookDto#setSubtitle(Optional) setSubtitle(Optional<String> subtitle)}
    * 
@@ -803,7 +820,8 @@ public class BookDtoBuilder {
    * Transforms the current value of <code>tags</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
    * <p>
    * Generated from setter {@link BookDto#setTags(List) setTags(List<String> tags)}
    * 
@@ -829,14 +847,15 @@ public class BookDtoBuilder {
    * Transforms the current value of <code>title</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
    * <p>
    * Generated from setter {@link BookDto#setTitle(String) setTitle(String title)}
    * 
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.mapTitle(value -> value);
+   * builder.mapTitle(String::trim);
    * }</pre>
    * 
    * @param titleMapper operator applied to the current value; its result becomes the new value

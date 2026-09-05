@@ -489,6 +489,8 @@ The field must be set before its mapper is called. Otherwise, the mapper throws
 `IllegalStateException`. Mapper helpers also work with `With` copy-and-modify operations because
 values copied from an existing instance count as set.
 
+A `null` result is stored as-is and validated by `build()` like any other value.
+
 If a DTO field already has a setter with the same signature as a generated mapper, the setter
 wins and the mapper is omitted with a conflict warning.
 

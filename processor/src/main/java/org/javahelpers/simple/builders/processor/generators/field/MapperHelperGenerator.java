@@ -35,6 +35,7 @@ import java.util.function.UnaryOperator;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.generators.MethodGenerator;
 import org.javahelpers.simple.builders.processor.generators.util.JavadocConstants;
+import org.javahelpers.simple.builders.processor.generators.util.JavadocExampleValues;
 import org.javahelpers.simple.builders.processor.model.core.FieldDto;
 import org.javahelpers.simple.builders.processor.model.javadoc.JavadocDto;
 import org.javahelpers.simple.builders.processor.model.method.BuilderMethodDto;
@@ -117,7 +118,9 @@ public class MapperHelperGenerator implements MethodGenerator {
                     + "Useful for adjustments relative to the current value, e.g. trimming, "
                     + "upper-casing, clamping or incrementing, and in combination with the "
                     + "<code>With</code> copy-and-modify flow.\n"
-                    + "The value must have been set before (directly or via an existing instance).",
+                    + "The value must have been set before (directly or via an existing instance).\n"
+                    + "A <code>null</code> result is stored as-is and validated by <code>build()</code> "
+                    + "like any other value.",
                 originalFieldName)
             .addParam(
                 parameterName,
@@ -127,7 +130,9 @@ public class MapperHelperGenerator implements MethodGenerator {
                 "IllegalStateException",
                 "if <code>%s</code> has not been set yet".formatted(originalFieldName)));
 
-    addExampleChainFragmentTemplate(methodDto, "#{methodName}(value -> value)");
+    String mapperExample =
+        JavadocExampleValues.getMapperExample(field.getFieldType()).orElse("value -> value");
+    addExampleChainFragmentTemplate(methodDto, "#{methodName}(" + mapperExample + ")");
     return Collections.singletonList(methodDto);
   }
 }

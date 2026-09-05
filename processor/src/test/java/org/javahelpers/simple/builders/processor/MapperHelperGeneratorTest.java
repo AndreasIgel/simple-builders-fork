@@ -26,7 +26,9 @@ package org.javahelpers.simple.builders.processor;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
 import static org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils.loadGeneratedSource;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -38,6 +40,7 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.function.UnaryOperator;
 import javax.annotation.processing.Processor;
 import javax.tools.JavaCompiler;
@@ -98,8 +101,11 @@ class MapperHelperGeneratorTest {
     ProcessorAsserts.assertContaining(
         generated, "this.quantity = changedValue(quantityMapper.apply(this.quantity.value()));");
     assertTrue(
-        generated.contains(".mapName(value -> value);"),
-        "Mapper methods should contribute an example chain fragment");
+        generated.contains(".mapName(String::trim);"),
+        "String mapper methods should use a type-aware example");
+    assertTrue(
+        generated.contains(".mapQuantity(value -> value * 2);"),
+        "Primitive mapper methods should use a type-aware example");
   }
 
   @Test
@@ -312,6 +318,60 @@ class MapperHelperGeneratorTest {
     }
   }
 
+  @Test
+  void mapperHelpers_NullResult_NonNullFieldFailsAtBuild() throws Exception {
+    try (URLClassLoader classLoader = compileRuntimeNullResult()) {
+      Class<?> builderClass = classLoader.loadClass("test.NullResultDtoBuilder");
+      Object builder = builderClass.getMethod("create").invoke(null);
+      Method name = builderClass.getMethod("name", String.class);
+      Method mapName = builderClass.getMethod("mapName", UnaryOperator.class);
+      Method build = builderClass.getMethod("build");
+
+      name.invoke(builder, "x");
+      assertDoesNotThrow(() -> mapName.invoke(builder, (UnaryOperator<String>) value -> null));
+
+      InvocationTargetException exception =
+          assertThrows(InvocationTargetException.class, () -> build.invoke(builder));
+      assertTrue(exception.getCause().getMessage().contains("marked as non-null"));
+    }
+  }
+
+  @Test
+  void mapperHelpers_NullResult_PrimitiveFieldFailsAtBuild() throws Exception {
+    try (URLClassLoader classLoader = compileRuntimeNullResult()) {
+      Class<?> builderClass = classLoader.loadClass("test.NullResultDtoBuilder");
+      Object builder = builderClass.getMethod("create").invoke(null);
+      Method quantity = builderClass.getMethod("quantity", int.class);
+      Method mapQuantity = builderClass.getMethod("mapQuantity", UnaryOperator.class);
+      Method build = builderClass.getMethod("build");
+
+      quantity.invoke(builder, 1);
+      assertDoesNotThrow(() -> mapQuantity.invoke(builder, (UnaryOperator<Integer>) value -> null));
+
+      InvocationTargetException exception =
+          assertThrows(InvocationTargetException.class, () -> build.invoke(builder));
+      assertTrue(exception.getCause().getMessage().contains("marked as non-null"));
+    }
+  }
+
+  @Test
+  void mapperHelpers_NullResult_NullableFieldBuildsWithNull() throws Exception {
+    try (URLClassLoader classLoader = compileRuntimeNullResult()) {
+      Class<?> builderClass = classLoader.loadClass("test.NullResultDtoBuilder");
+      Object builder = builderClass.getMethod("create").invoke(null);
+      Method description = builderClass.getMethod("description", String.class);
+      Method mapDescription = builderClass.getMethod("mapDescription", UnaryOperator.class);
+      Method build = builderClass.getMethod("build");
+
+      description.invoke(builder, "x");
+      assertDoesNotThrow(
+          () -> mapDescription.invoke(builder, (UnaryOperator<String>) value -> null));
+
+      Object dto = build.invoke(builder);
+      assertNull(dto.getClass().getMethod("getDescription").invoke(dto));
+    }
+  }
+
   private static JavaFileObject personSource() {
     return ProcessorTestUtils.forSource(
         """
@@ -380,18 +440,66 @@ class MapperHelperGeneratorTest {
         """);
   }
 
+  private URLClassLoader compileRuntimeNullResult() throws Exception {
+    return compileRuntimeSources(
+        Map.of(
+            "NotNull.java",
+            """
+            package jakarta.validation.constraints;
+
+            import java.lang.annotation.ElementType;
+            import java.lang.annotation.Retention;
+            import java.lang.annotation.RetentionPolicy;
+            import java.lang.annotation.Target;
+
+            @Retention(RetentionPolicy.RUNTIME)
+            @Target({ElementType.FIELD, ElementType.PARAMETER})
+            public @interface NotNull {}
+            """,
+            "NullResultDto.java",
+            """
+            package test;
+
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+            import jakarta.validation.constraints.NotNull;
+
+            @SimpleBuilder
+            public class NullResultDto {
+              private String name;
+              private int quantity;
+              private String description;
+
+              public String getName() { return name; }
+              public void setName(@NotNull String name) { this.name = name; }
+              public int getQuantity() { return quantity; }
+              public void setQuantity(int quantity) { this.quantity = quantity; }
+              public String getDescription() { return description; }
+              public void setDescription(String description) { this.description = description; }
+            }
+            """));
+  }
+
   private URLClassLoader compileRuntimeSource(String fileName, String source) throws Exception {
+    return compileRuntimeSources(Map.of(fileName, source));
+  }
+
+  private URLClassLoader compileRuntimeSources(Map<String, String> sources) throws Exception {
     Path sourceDirectory = Files.createDirectories(tempDirectory.resolve("src/test"));
     Path classDirectory = Files.createDirectories(tempDirectory.resolve("classes"));
-    Path sourceFile = sourceDirectory.resolve(fileName);
-    Files.writeString(sourceFile, source);
+    for (Map.Entry<String, String> source : sources.entrySet()) {
+      Files.writeString(sourceDirectory.resolve(source.getKey()), source.getValue());
+    }
 
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     try (StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null)) {
       fileManager.setLocation(
           javax.tools.StandardLocation.CLASS_OUTPUT, List.of(classDirectory.toFile()));
-      Iterable<? extends JavaFileObject> sources =
-          fileManager.getJavaFileObjects(sourceFile.toFile());
+      Iterable<? extends JavaFileObject> sourceFiles =
+          fileManager.getJavaFileObjects(
+              sources.keySet().stream()
+                  .map(sourceDirectory::resolve)
+                  .map(Path::toFile)
+                  .toArray(java.io.File[]::new));
       List<String> options =
           List.of(
               "-classpath",
@@ -400,7 +508,7 @@ class MapperHelperGeneratorTest {
               System.getProperty("java.class.path"),
               "-Asimplebuilder.generateMapperHelpers=ENABLED");
       JavaCompiler.CompilationTask task =
-          compiler.getTask(null, fileManager, null, options, null, sources);
+          compiler.getTask(null, fileManager, null, options, null, sourceFiles);
       task.setProcessors(List.<Processor>of(new BuilderProcessor()));
       assertTrue(task.call(), "Runtime test source should compile");
     }

@@ -33,11 +33,11 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .name("example value")
  *     .name("Hello %s", "World")
  *     .name(() -> "example value")
- *     .mapName(value -> value)
+ *     .mapName(String::trim)
  *     .name(sb -> sb.append("text"))
  *     .birthdate(LocalDate.now())
  *     .birthdate(() -> LocalDate.now())
- *     .mapBirthdate(value -> value)
+ *     .mapBirthdate(value -> value.plusDays(1))
  *     .mannschaft(new MannschaftDto())
  *     .mannschaft(MannschaftDto::new)
  *     .mapMannschaft(value -> value)
@@ -50,7 +50,7 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .add2NickNames("example value")
  *     .nickNames2("example value")
  *     .nickNames2(() -> "example value")
- *     .mapNickNames2(value -> value)
+ *     .mapNickNames2(String::trim)
  *     .nickNames2("example value")
  *     .build();
  * }</pre>
@@ -242,14 +242,15 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * Transforms the current value of <code>birthdate</code> in place by applying the given operator, instead of reading
    * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
    * <p>
    * Generated from setter {@link PersonDto#setBirthdate(LocalDate) setBirthdate(LocalDate birthdate)}
    * 
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.mapBirthdate(value -> value);
+   * builder.mapBirthdate(value -> value.plusDays(1));
    * }</pre>
    * 
    * @param birthdateMapper operator applied to the current value; its result becomes the new value
@@ -268,7 +269,8 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * Transforms the current value of <code>mannschaft</code> in place by applying the given operator, instead of reading
    * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
    * <p>
    * Generated from setter {@link PersonDto#setMannschaft(MannschaftDto) setMannschaft(MannschaftDto mannschaft)}
    * 
@@ -294,14 +296,15 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * Transforms the current value of <code>name</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
    * <p>
    * Generated from parameter in constructor {@link PersonDto#PersonDto(String) PersonDto(String name)}
    * 
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.mapName(value -> value);
+   * builder.mapName(String::trim);
    * }</pre>
    * 
    * @param nameMapper operator applied to the current value; its result becomes the new value
@@ -320,7 +323,8 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * Transforms the current value of <code>nickNames</code> in place by applying the given operator, instead of reading
    * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
    * <p>
    * Generated from setter {@link PersonDto#setNickNames(List) setNickNames(List<String> nickNames)}
    * 
@@ -346,14 +350,15 @@ public class PersonDtoBuilder implements IBuilderBase<PersonDto> {
    * Transforms the current value of <code>nickNames2</code> in place by applying the given operator, instead of reading
    * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
    * <p>
    * Generated from setter {@link PersonDto#setNickNames2(String) setNickNames2(String nickNames2)}
    * 
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.mapNickNames2(value -> value);
+   * builder.mapNickNames2(String::trim);
    * }</pre>
    * 
    * @param nickNames2Mapper operator applied to the current value; its result becomes the new value

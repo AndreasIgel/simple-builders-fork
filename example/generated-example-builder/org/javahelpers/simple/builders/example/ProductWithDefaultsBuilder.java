@@ -29,19 +29,19 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .name("example value")
  *     .name("Hello %s", "World")
  *     .name(() -> "example value")
- *     .mapName(value -> value)
+ *     .mapName(String::trim)
  *     .name(sb -> sb.append("text"))
  *     .price(3.14)
  *     .price(() -> 3.14)
- *     .mapPrice(value -> value)
+ *     .mapPrice(value -> value * 2)
  *     .category("example value")
  *     .category("Hello %s", "World")
  *     .category(() -> "example value")
- *     .mapCategory(value -> value)
+ *     .mapCategory(String::trim)
  *     .category(sb -> sb.append("text"))
  *     .active(true)
  *     .active(() -> true)
- *     .mapActive(value -> value)
+ *     .mapActive(value -> !value)
  *     .build();
  * }</pre>
  */
@@ -233,7 +233,8 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
    * Transforms the current value of <code>active</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
    * <p>
    * Generated from parameter in constructor
    * {@link ProductWithDefaults#ProductWithDefaults(String, double, String, boolean) ProductWithDefaults(String name,
@@ -242,7 +243,7 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.mapActive(value -> value);
+   * builder.mapActive(value -> !value);
    * }</pre>
    * 
    * @param activeMapper operator applied to the current value; its result becomes the new value
@@ -261,7 +262,8 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
    * Transforms the current value of <code>category</code> in place by applying the given operator, instead of reading
    * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
    * <p>
    * Generated from parameter in constructor
    * {@link ProductWithDefaults#ProductWithDefaults(String, double, String, boolean) ProductWithDefaults(String name,
@@ -270,7 +272,7 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.mapCategory(value -> value);
+   * builder.mapCategory(String::trim);
    * }</pre>
    * 
    * @param categoryMapper operator applied to the current value; its result becomes the new value
@@ -289,7 +291,8 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
    * Transforms the current value of <code>name</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
    * <p>
    * Generated from parameter in constructor
    * {@link ProductWithDefaults#ProductWithDefaults(String, double, String, boolean) ProductWithDefaults(String name,
@@ -298,7 +301,7 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.mapName(value -> value);
+   * builder.mapName(String::trim);
    * }</pre>
    * 
    * @param nameMapper operator applied to the current value; its result becomes the new value
@@ -317,7 +320,8 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
    * Transforms the current value of <code>price</code> in place by applying the given operator, instead of reading it
    * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
    * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
-   * value must have been set before (directly or via an existing instance).
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
    * <p>
    * Generated from parameter in constructor
    * {@link ProductWithDefaults#ProductWithDefaults(String, double, String, boolean) ProductWithDefaults(String name,
@@ -326,7 +330,7 @@ public class ProductWithDefaultsBuilder implements IBuilderBase<ProductWithDefau
    * <h4>Example:</h4>
    * 
    * <pre>{@code
-   * builder.mapPrice(value -> value);
+   * builder.mapPrice(value -> value * 2);
    * }</pre>
    * 
    * @param priceMapper operator applied to the current value; its result becomes the new value
