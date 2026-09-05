@@ -25,7 +25,11 @@ package org.javahelpers.simple.builders.processor.classgen.roaster;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.core.enums.FormattingMode;
@@ -43,6 +47,8 @@ import org.jboss.forge.roaster.model.util.FormatterProfileReader;
  * <p>Supports three modes controlled by {@link FormattingMode}: full Eclipse JDT formatting,
  * lightweight cosmetic post-processing, or no formatting at all. See the {@link FormattingMode}
  * enum for details on each mode.
+ *
+ * <p>The Eclipse formatter profile can be overridden with a file system path or classpath resource.
  */
 public final class RoasterSourceFormatter {
 
@@ -63,16 +69,24 @@ public final class RoasterSourceFormatter {
    * @throws NullPointerException if logger or formattingMode is null
    */
   public RoasterSourceFormatter(ProcessingLogger logger, FormattingMode formattingMode) {
-    this(logger, formattingMode, DEFAULT_FORMATTER_PROFILE_RESOURCE);
+    this(logger, formattingMode, null);
   }
 
-  RoasterSourceFormatter(
-      ProcessingLogger logger, FormattingMode formattingMode, String formatterProfileResource) {
+  /**
+   * Creates a formatter instance with an optional Eclipse formatter profile override.
+   *
+   * @param logger logger for warnings (e.g. formatter profile load failures)
+   * @param formattingMode the formatting mode to use for source code post-processing
+   * @param formatterProfile file system path or classpath resource for the Eclipse formatter
+   *     profile; blank values use the bundled default
+   * @throws NullPointerException if logger or formattingMode is null
+   */
+  public RoasterSourceFormatter(
+      ProcessingLogger logger, FormattingMode formattingMode, String formatterProfile) {
     this.logger = Objects.requireNonNull(logger, "logger must not be null");
     this.formattingMode = Objects.requireNonNull(formattingMode, "formattingMode must not be null");
     this.formatterProfileResource =
-        Objects.requireNonNull(
-            formatterProfileResource, "formatterProfileResource must not be null");
+        StringUtils.defaultIfBlank(formatterProfile, DEFAULT_FORMATTER_PROFILE_RESOURCE);
     this.formatterProperties = loadFormatterProperties();
     this.formatterProfileAvailable = !formatterProperties.isEmpty();
     if (formattingMode == FormattingMode.JDT && !formatterProfileAvailable) {
@@ -406,24 +420,77 @@ public final class RoasterSourceFormatter {
   }
 
   private Properties loadFormatterProperties() {
-    try (InputStream inputStream =
-        RoasterSourceFormatter.class
-            .getClassLoader()
-            .getResourceAsStream(formatterProfileResource)) {
-      if (inputStream == null) {
-        logger.warning(
-            "simple-builders: Bundled Eclipse formatter profile '%s' was not found on the processor classpath.",
-            formatterProfileResource);
-        return new Properties();
-      }
-      FormatterProfileReader profileReader = FormatterProfileReader.fromEclipseXml(inputStream);
-      return profileReader.getDefaultProperties();
-    } catch (IOException ex) {
-      logger.warning(
-          "simple-builders: Failed to load bundled Eclipse formatter profile '%s': %s",
-          formatterProfileResource,
-          StringUtils.defaultIfBlank(ex.getMessage(), ex.getClass().getSimpleName()));
-      return new Properties();
+    if (DEFAULT_FORMATTER_PROFILE_RESOURCE.equals(formatterProfileResource)) {
+      return loadBundledProfile();
     }
+    return loadConfiguredProfile(formatterProfileResource).orElseGet(this::loadBundledProfile);
+  }
+
+  /**
+   * Loads the user-configured profile; warns and returns empty when it cannot be loaded.
+   *
+   * @param location file system path or classpath resource
+   * @return the loaded formatter properties, or empty when loading fails
+   */
+  private Optional<Properties> loadConfiguredProfile(String location) {
+    try {
+      Optional<Properties> properties = readProfile(location);
+      if (properties.isEmpty()) {
+        logger.warning(
+            "simple-builders: Eclipse formatter profile '%s' was not found as a file or classpath resource; falling back to the bundled profile.",
+            location);
+        return Optional.empty();
+      }
+      return properties;
+    } catch (IOException | RuntimeException ex) {
+      logger.warning(
+          "simple-builders: Failed to load Eclipse formatter profile '%s': %s; falling back to the bundled profile.",
+          location, describe(ex));
+      return Optional.empty();
+    }
+  }
+
+  /** Loads the bundled profile; warns and returns empty properties when it cannot be loaded. */
+  private Properties loadBundledProfile() {
+    try {
+      Optional<Properties> properties = readProfile(DEFAULT_FORMATTER_PROFILE_RESOURCE);
+      if (properties.isPresent()) {
+        return properties.get();
+      }
+      logger.warning(
+          "simple-builders: Bundled Eclipse formatter profile '%s' was not found on the processor classpath.",
+          DEFAULT_FORMATTER_PROFILE_RESOURCE);
+    } catch (IOException | RuntimeException ex) {
+      logger.warning(
+          "simple-builders: Failed to load bundled Eclipse formatter profile '%s': %s.",
+          DEFAULT_FORMATTER_PROFILE_RESOURCE, describe(ex));
+    }
+    return new Properties();
+  }
+
+  /** Opens location as file, then classpath resource, and parses it; empty when not found. */
+  private Optional<Properties> readProfile(String location) throws IOException {
+    try (InputStream inputStream = openProfileStream(location)) {
+      if (inputStream == null) {
+        return Optional.empty();
+      }
+      return Optional.of(FormatterProfileReader.fromEclipseXml(inputStream).getDefaultProperties());
+    }
+  }
+
+  private String describe(Exception ex) {
+    return StringUtils.defaultIfBlank(ex.getMessage(), ex.getClass().getSimpleName());
+  }
+
+  private InputStream openProfileStream(String location) throws IOException {
+    try {
+      Path path = Path.of(location);
+      if (Files.isRegularFile(path)) {
+        return Files.newInputStream(path);
+      }
+    } catch (InvalidPathException ignored) {
+      // Treat invalid paths as classpath resource names.
+    }
+    return RoasterSourceFormatter.class.getClassLoader().getResourceAsStream(location);
   }
 }

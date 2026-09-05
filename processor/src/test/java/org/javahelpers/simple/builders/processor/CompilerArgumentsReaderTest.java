@@ -89,6 +89,15 @@ class CompilerArgumentsReaderTest {
         "Should fall back to simple option name");
   }
 
+  @Test
+  void readValue_FormatterProfileCompilerOption_ReturnsValue() {
+    ProcessingEnvironment env =
+        ProcessingEnvironmentStub.builder().put("simplebuilder.formatterProfile", "x").build();
+    CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
+
+    assertEquals("x", reader.readValue(CompilerArgumentsEnum.FORMATTER_PROFILE));
+  }
+
   /** Test: readBooleanValue returns false when value is null. */
   @Test
   void readBooleanValue_NullValue_ReturnsFalse() {

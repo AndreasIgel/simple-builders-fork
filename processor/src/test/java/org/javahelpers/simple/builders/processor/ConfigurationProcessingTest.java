@@ -6,6 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.testing.compile.Compilation;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import javax.tools.JavaFileObject;
 import org.javahelpers.simple.builders.core.enums.AccessModifier;
 import org.javahelpers.simple.builders.core.enums.FormattingMode;
@@ -14,6 +18,7 @@ import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration
 import org.javahelpers.simple.builders.processor.testing.ProcessorAsserts;
 import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /**
  * Tests ensuring all configuration options are properly handled.
@@ -119,6 +124,42 @@ class ConfigurationProcessingTest {
     assertEquals("Builder", config.getBuilderSuffix());
     assertEquals("", config.getSetterSuffix());
     assertEquals("lightweight", config.formattingMode());
+  }
+
+  @Test
+  void compilerArguments_FormatterProfile_UsesCustomProfile(@TempDir Path tempDir)
+      throws IOException {
+    String profile =
+        new String(
+                ConfigurationProcessingTest.class
+                    .getClassLoader()
+                    .getResourceAsStream("eclipse-java-format.xml")
+                    .readAllBytes(),
+                StandardCharsets.UTF_8)
+            .replace(
+                "<setting id=\"org.eclipse.jdt.core.formatter.tabulation.char\" value=\"space\"/>",
+                "<setting id=\"org.eclipse.jdt.core.formatter.tabulation.char\" value=\"tab\"/>");
+    Path profilePath = tempDir.resolve("custom-eclipse-profile.xml");
+    Files.writeString(profilePath, profile);
+
+    JavaFileObject source =
+        ProcessorTestUtils.simpleBuilderClass(
+            "test",
+            "FormatterProfileDto",
+            """
+            private String name;
+            public String getName() { return name; }
+            public void setName(String name) { this.name = name; }
+            """);
+    Compilation compilation =
+        ProcessorTestUtils.createCompiler()
+            .withOptions("-Asimplebuilder.formatterProfile=" + profilePath)
+            .compile(source);
+
+    assertThat(compilation).succeeded();
+    String generated =
+        ProcessorTestUtils.loadGeneratedSource(compilation, "FormatterProfileDtoBuilder");
+    assertTrue(generated.contains("\t"), "Custom formatter profile should produce tab indentation");
   }
 
   /**

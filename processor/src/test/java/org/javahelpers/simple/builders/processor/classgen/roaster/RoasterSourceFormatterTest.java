@@ -28,6 +28,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -47,6 +51,7 @@ import javax.tools.Diagnostic;
 import org.javahelpers.simple.builders.core.enums.FormattingMode;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -640,17 +645,6 @@ class RoasterSourceFormatterTest {
   }
 
   @Test
-  void constructor_jdtMode_missingProfile_logsFallbackWarning() {
-    TestProcessingEnv env = createProcessingEnv();
-    ProcessingLogger logger = new ProcessingLogger(env);
-    new RoasterSourceFormatter(logger, FormattingMode.JDT, "nonexistent-profile.xml");
-    assertTrue(
-        env.messager.warnings.stream()
-            .anyMatch(w -> w.contains("JDT formatting requested") && w.contains("unavailable")),
-        "JDT mode with missing profile should log fallback warning");
-  }
-
-  @Test
   void constructor_lightweightMode_missingProfile_noFallbackWarning() {
     TestProcessingEnv env = createProcessingEnv();
     ProcessingLogger logger = new ProcessingLogger(env);
@@ -672,22 +666,84 @@ class RoasterSourceFormatterTest {
   }
 
   @Test
-  void format_jdtMode_missingProfile_fallsBackToLightweight() {
+  void constructor_fileSystemProfile_isUsedForFormatting(@TempDir Path tempDir) throws IOException {
+    String profile =
+        new String(
+                RoasterSourceFormatter.class
+                    .getClassLoader()
+                    .getResourceAsStream(RoasterSourceFormatter.DEFAULT_FORMATTER_PROFILE_RESOURCE)
+                    .readAllBytes(),
+                StandardCharsets.UTF_8)
+            .replace(
+                "<setting id=\"org.eclipse.jdt.core.formatter.tabulation.char\" value=\"space\"/>",
+                "<setting id=\"org.eclipse.jdt.core.formatter.tabulation.char\" value=\"tab\"/>")
+            .replace(
+                "<setting id=\"org.eclipse.jdt.core.formatter.tabulation.size\" value=\"2\"/>",
+                "<setting id=\"org.eclipse.jdt.core.formatter.tabulation.size\" value=\"4\"/>");
+    Path profilePath = tempDir.resolve("custom-eclipse-profile.xml");
+    Files.writeString(profilePath, profile);
+
     TestProcessingEnv env = createProcessingEnv();
     ProcessingLogger logger = new ProcessingLogger(env);
     RoasterSourceFormatter formatter =
-        new RoasterSourceFormatter(logger, FormattingMode.JDT, "nonexistent-profile.xml");
+        new RoasterSourceFormatter(logger, FormattingMode.JDT, profilePath.toString());
+    RoasterSourceFormatter defaultFormatter =
+        new RoasterSourceFormatter(new ProcessingLogger(createProcessingEnv()), FormattingMode.JDT);
+    String input =
+        """
+        package test;
+        public class Foo {
+        public void bar() {
+        }
+        }
+        """;
+    String result = formatter.format(input);
+    String defaultResult = defaultFormatter.format(input);
+    assertTrue(result.contains("\t"), "Custom tab profile should produce tab indentation");
+    assertTrue(!defaultResult.contains("\t"), "Bundled profile should produce spaces");
+    assertTrue(
+        env.messager.warnings.isEmpty(), "A valid filesystem profile should not log warnings");
+  }
+
+  @Test
+  void constructor_classpathProfile_explicitDefaultName_noWarning() {
+    TestProcessingEnv env = createProcessingEnv();
+    ProcessingLogger logger = new ProcessingLogger(env);
+    new RoasterSourceFormatter(
+        logger, FormattingMode.JDT, RoasterSourceFormatter.DEFAULT_FORMATTER_PROFILE_RESOURCE);
+    assertTrue(
+        env.messager.warnings.isEmpty(), "The bundled classpath profile should load cleanly");
+  }
+
+  @Test
+  void constructor_missingProfile_fallsBackToBundledProfile() {
+    TestProcessingEnv env = createProcessingEnv();
+    ProcessingLogger logger = new ProcessingLogger(env);
+    RoasterSourceFormatter formatter =
+        new RoasterSourceFormatter(logger, FormattingMode.JDT, "does/not/exist.xml");
     String input =
         """
         package test;
         \tpublic class Foo {
-        }
+        \t}
         """;
     String result = formatter.format(input);
-    assertNotNull(result, "Format should always return a non-null string");
     assertTrue(
-        !result.contains("\t"),
-        "JDT mode with missing profile should fall back to lightweight (tabs converted)");
+        env.messager.warnings.stream()
+            .anyMatch(w -> w.contains("not found") && w.contains("does/not/exist.xml")),
+        "Missing formatter profile should log a not-found warning");
+    assertTrue(
+        env.messager.warnings.stream().noneMatch(w -> w.contains("JDT formatting requested")),
+        "Bundled profile fallback should keep JDT formatting available");
+    assertTrue(!result.contains("\t"), "Bundled profile should produce spaces");
+  }
+
+  @Test
+  void constructor_blankProfile_usesBundledDefault() {
+    TestProcessingEnv env = createProcessingEnv();
+    ProcessingLogger logger = new ProcessingLogger(env);
+    new RoasterSourceFormatter(logger, FormattingMode.JDT, "  ");
+    assertTrue(env.messager.warnings.isEmpty(), "Blank profile should use the bundled default");
   }
 
   @Test

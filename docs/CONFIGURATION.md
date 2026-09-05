@@ -1044,6 +1044,24 @@ Per-annotation override:
 public class PersonDto { ... }
 ```
 
+#### `formatterProfile`
+
+**Default**: `eclipse-java-format.xml` (bundled) | **Compiler Option**: `-Asimplebuilder.formatterProfile=path/to/profile.xml`
+
+Specifies an external Eclipse formatter profile for JDT formatting. The processor uses the path as given, without placeholder substitution; Maven interpolates `${project.basedir}` in `pom.xml` before invoking javac, while relative paths are resolved against javac's working directory (the module directory under Maven). A file system path is tried first, then a classpath resource. If neither can be loaded, a warning is logged and the bundled profile is used. This is a project-wide compiler option and cannot be overridden by an annotation.
+
+**Maven**:
+```xml
+<compilerArgs>
+  <arg>-Asimplebuilder.formatterProfile=${project.basedir}/config/eclipse-formatter.xml</arg>
+</compilerArgs>
+```
+
+**Gradle**:
+```groovy
+options.compilerArgs << "-Asimplebuilder.formatterProfile=${project.projectDir}/config/eclipse-formatter.xml"
+```
+
 ## Examples
 
 ### Minimal Builder
@@ -1438,6 +1456,7 @@ methodAccess = AccessModifier.PRIVATE
 
 # Performance Optimization
 -Asimplebuilder.formattingMode=JDT|LIGHTWEIGHT|NONE
+-Asimplebuilder.formatterProfile=path/to/profile.xml
 ```
 
 ### Complete Options Example
