@@ -144,6 +144,11 @@ public enum CompilerArgumentsEnum {
    */
   FORMATTING_MODE("formattingMode"),
 
+  /**
+   * Option for an external Eclipse formatter profile XML (file system path or classpath resource).
+   */
+  FORMATTER_PROFILE("formatterProfile"),
+
   // === Performance Tracking ===
   /** Option for performance tracking during annotation processing. */
   PERFORMANCE_TRACKING("performanceTracking"),

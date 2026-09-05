@@ -83,6 +83,9 @@ public class RoasterCodeGenerator {
   /** Performance tracker for sub-phase timing (Source Construction, File Writing). */
   private final PerformanceTracker performanceTracker;
 
+  /** Optional Eclipse formatter profile override passed to each cached formatter. */
+  private final String formatterProfile;
+
   /** Cached formatters per formatting mode (at most 3 instances, created lazily). */
   private final EnumMap<FormattingMode, RoasterSourceFormatter> formatterCache =
       new EnumMap<>(FormattingMode.class);
@@ -96,9 +99,27 @@ public class RoasterCodeGenerator {
    */
   public RoasterCodeGenerator(
       ProcessingEnvironment processingEnv, ProcessingLogger logger, PerformanceTracker tracker) {
+    this(processingEnv, logger, tracker, null);
+  }
+
+  /**
+   * Constructor for RoasterCodeGenerator with an optional formatter profile override.
+   *
+   * @param processingEnv Processing environment for accessing filer and element utilities
+   * @param logger Logger for debug output
+   * @param tracker Performance tracker for sub-phase timing
+   * @param formatterProfile file system path or classpath resource for the Eclipse formatter
+   *     profile
+   */
+  public RoasterCodeGenerator(
+      ProcessingEnvironment processingEnv,
+      ProcessingLogger logger,
+      PerformanceTracker tracker,
+      String formatterProfile) {
     this.processingEnv = processingEnv;
     this.logger = logger;
     this.performanceTracker = tracker;
+    this.formatterProfile = formatterProfile;
   }
 
   /**
@@ -111,7 +132,8 @@ public class RoasterCodeGenerator {
    * @return a cached or new formatter instance
    */
   private RoasterSourceFormatter getFormatter(FormattingMode mode) {
-    return formatterCache.computeIfAbsent(mode, m -> new RoasterSourceFormatter(logger, m));
+    return formatterCache.computeIfAbsent(
+        mode, m -> new RoasterSourceFormatter(logger, m, formatterProfile));
   }
 
   /**

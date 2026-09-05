@@ -93,7 +93,8 @@ public class BuilderProcessor extends AbstractProcessor {
 
     this.context = new ProcessingContext(logger, globalConfig, processingEnv);
     this.codeGenerator =
-        new RoasterCodeGenerator(processingEnv, logger, context.getPerformanceTracker());
+        new RoasterCodeGenerator(
+            processingEnv, logger, context.getPerformanceTracker(), context.getFormatterProfile());
     this.jacksonModuleGenerator = new JacksonModuleGenerator(processingEnv, logger, globalConfig);
 
     // Initialize GeneratorRegistry once during processor initialization

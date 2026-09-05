@@ -32,6 +32,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import org.apache.commons.lang3.StringUtils;
 import org.javahelpers.simple.builders.processor.generators.registry.GeneratorRegistry;
 import org.javahelpers.simple.builders.processor.model.core.BuilderConfiguration;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
@@ -53,6 +54,7 @@ public final class ProcessingContext {
   private final BuilderConfigurationReader configurationReader;
   private final ProcessingEnvironment processingEnv;
   private final PerformanceTracker performanceTracker;
+  private final String formatterProfile;
   private GeneratorRegistry generatorRegistry;
   private BuilderConfiguration configurationForProcessingTarget;
 
@@ -78,6 +80,8 @@ public final class ProcessingContext {
     boolean perfTrackingEnabled =
         argReader.readBooleanValue(CompilerArgumentsEnum.PERFORMANCE_TRACKING);
     String perfOutputFile = argReader.readValue(CompilerArgumentsEnum.PERFORMANCE_OUTPUT_FILE);
+    this.formatterProfile =
+        StringUtils.trimToNull(argReader.readValue(CompilerArgumentsEnum.FORMATTER_PROFILE));
     this.performanceTracker =
         perfTrackingEnabled
             ? new ActivePerformanceTracker(perfOutputFile)
@@ -138,6 +142,15 @@ public final class ProcessingContext {
    */
   public PerformanceTracker getPerformanceTracker() {
     return performanceTracker;
+  }
+
+  /**
+   * Gets the configured Eclipse formatter profile.
+   *
+   * @return the formatter profile path or classpath resource, or null for the bundled default
+   */
+  public String getFormatterProfile() {
+    return formatterProfile;
   }
 
   /**
