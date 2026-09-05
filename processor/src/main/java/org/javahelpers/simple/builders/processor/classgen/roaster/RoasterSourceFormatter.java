@@ -420,48 +420,66 @@ public final class RoasterSourceFormatter {
   }
 
   private Properties loadFormatterProperties() {
-    boolean fallbackToBundled =
-        !DEFAULT_FORMATTER_PROFILE_RESOURCE.equals(formatterProfileResource);
-    Optional<Properties> configured = loadProfile(formatterProfileResource, fallbackToBundled);
-    if (configured.isEmpty() && fallbackToBundled) {
-      configured = loadProfile(DEFAULT_FORMATTER_PROFILE_RESOURCE, false);
+    if (DEFAULT_FORMATTER_PROFILE_RESOURCE.equals(formatterProfileResource)) {
+      return loadBundledProfile();
     }
-    return configured.orElseGet(Properties::new);
+    return loadConfiguredProfile(formatterProfileResource).orElseGet(this::loadBundledProfile);
   }
 
   /**
-   * Opens {@code location} as a regular file first, then as a classpath resource; logs and returns
-   * empty on any failure.
+   * Loads the user-configured profile; warns and returns empty when it cannot be loaded.
    *
    * @param location file system path or classpath resource
-   * @param fallbackToBundled whether loading failure will fall back to the bundled profile
    * @return the loaded formatter properties, or empty when loading fails
    */
-  private Optional<Properties> loadProfile(String location, boolean fallbackToBundled) {
-    String fallbackSuffix = fallbackToBundled ? "; falling back to the bundled profile." : ".";
-    try (InputStream inputStream = openProfileStream(location)) {
-      if (inputStream == null) {
-        if (DEFAULT_FORMATTER_PROFILE_RESOURCE.equals(location)) {
-          logger.warning(
-              "simple-builders: Bundled Eclipse formatter profile '%s' was not found on the processor classpath%s",
-              location, fallbackSuffix);
-        } else {
-          logger.warning(
-              "simple-builders: Eclipse formatter profile '%s' was not found as a file or classpath resource%s",
-              location, fallbackSuffix);
-        }
+  private Optional<Properties> loadConfiguredProfile(String location) {
+    try {
+      Optional<Properties> properties = readProfile(location);
+      if (properties.isEmpty()) {
+        logger.warning(
+            "simple-builders: Eclipse formatter profile '%s' was not found as a file or classpath resource; falling back to the bundled profile.",
+            location);
         return Optional.empty();
       }
-      FormatterProfileReader profileReader = FormatterProfileReader.fromEclipseXml(inputStream);
-      return Optional.of(profileReader.getDefaultProperties());
+      return properties;
     } catch (IOException | RuntimeException ex) {
       logger.warning(
-          "simple-builders: Failed to load Eclipse formatter profile '%s': %s",
-          location,
-          StringUtils.defaultIfBlank(ex.getMessage(), ex.getClass().getSimpleName())
-              + fallbackSuffix);
+          "simple-builders: Failed to load Eclipse formatter profile '%s': %s; falling back to the bundled profile.",
+          location, describe(ex));
       return Optional.empty();
     }
+  }
+
+  /** Loads the bundled profile; warns and returns empty properties when it cannot be loaded. */
+  private Properties loadBundledProfile() {
+    try {
+      Optional<Properties> properties = readProfile(DEFAULT_FORMATTER_PROFILE_RESOURCE);
+      if (properties.isPresent()) {
+        return properties.get();
+      }
+      logger.warning(
+          "simple-builders: Bundled Eclipse formatter profile '%s' was not found on the processor classpath.",
+          DEFAULT_FORMATTER_PROFILE_RESOURCE);
+    } catch (IOException | RuntimeException ex) {
+      logger.warning(
+          "simple-builders: Failed to load bundled Eclipse formatter profile '%s': %s.",
+          DEFAULT_FORMATTER_PROFILE_RESOURCE, describe(ex));
+    }
+    return new Properties();
+  }
+
+  /** Opens location as file, then classpath resource, and parses it; empty when not found. */
+  private Optional<Properties> readProfile(String location) throws IOException {
+    try (InputStream inputStream = openProfileStream(location)) {
+      if (inputStream == null) {
+        return Optional.empty();
+      }
+      return Optional.of(FormatterProfileReader.fromEclipseXml(inputStream).getDefaultProperties());
+    }
+  }
+
+  private String describe(Exception ex) {
+    return StringUtils.defaultIfBlank(ex.getMessage(), ex.getClass().getSimpleName());
   }
 
   private InputStream openProfileStream(String location) throws IOException {

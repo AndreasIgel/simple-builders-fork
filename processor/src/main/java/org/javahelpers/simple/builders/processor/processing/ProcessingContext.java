@@ -145,6 +145,24 @@ public final class ProcessingContext {
   }
 
   /**
+   * Gets the processing environment for this context.
+   *
+   * @return the processing environment
+   */
+  public ProcessingEnvironment getProcessingEnvironment() {
+    return processingEnv;
+  }
+
+  /**
+   * Gets the processing logger for this context.
+   *
+   * @return the processing logger
+   */
+  public ProcessingLogger getLogger() {
+    return logger;
+  }
+
+  /**
    * Gets the configured Eclipse formatter profile.
    *
    * @return the formatter profile path or classpath resource, or null for the bundled default

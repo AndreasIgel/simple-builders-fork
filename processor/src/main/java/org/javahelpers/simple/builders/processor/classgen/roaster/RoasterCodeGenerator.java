@@ -59,6 +59,7 @@ import org.javahelpers.simple.builders.processor.model.method.MethodParameterDto
 import org.javahelpers.simple.builders.processor.model.type.NestedTypeDto;
 import org.javahelpers.simple.builders.processor.model.type.TypeName;
 import org.javahelpers.simple.builders.processor.model.type.TypeNameArray;
+import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 import org.javahelpers.simple.builders.processor.processing.logging.PerformanceTracker;
 import org.javahelpers.simple.builders.processor.processing.logging.ProcessingLogger;
 import org.javahelpers.simple.builders.processor.util.ImportCollector;
@@ -91,35 +92,16 @@ public class RoasterCodeGenerator {
       new EnumMap<>(FormattingMode.class);
 
   /**
-   * Constructor for RoasterCodeGenerator.
+   * Creates a code generator from the processing context.
    *
-   * @param processingEnv Processing environment for accessing filer and element utilities
-   * @param logger Logger for debug output
-   * @param tracker Performance tracker for sub-phase timing
+   * @param context processing context providing the environment, logger, performance tracker, and
+   *     formatter profile
    */
-  public RoasterCodeGenerator(
-      ProcessingEnvironment processingEnv, ProcessingLogger logger, PerformanceTracker tracker) {
-    this(processingEnv, logger, tracker, null);
-  }
-
-  /**
-   * Constructor for RoasterCodeGenerator with an optional formatter profile override.
-   *
-   * @param processingEnv Processing environment for accessing filer and element utilities
-   * @param logger Logger for debug output
-   * @param tracker Performance tracker for sub-phase timing
-   * @param formatterProfile file system path or classpath resource for the Eclipse formatter
-   *     profile
-   */
-  public RoasterCodeGenerator(
-      ProcessingEnvironment processingEnv,
-      ProcessingLogger logger,
-      PerformanceTracker tracker,
-      String formatterProfile) {
-    this.processingEnv = processingEnv;
-    this.logger = logger;
-    this.performanceTracker = tracker;
-    this.formatterProfile = formatterProfile;
+  public RoasterCodeGenerator(ProcessingContext context) {
+    this.processingEnv = context.getProcessingEnvironment();
+    this.logger = context.getLogger();
+    this.performanceTracker = context.getPerformanceTracker();
+    this.formatterProfile = context.getFormatterProfile();
   }
 
   /**
@@ -132,8 +114,12 @@ public class RoasterCodeGenerator {
    * @return a cached or new formatter instance
    */
   private RoasterSourceFormatter getFormatter(FormattingMode mode) {
-    return formatterCache.computeIfAbsent(
-        mode, m -> new RoasterSourceFormatter(logger, m, formatterProfile));
+    return formatterCache.computeIfAbsent(mode, this::createFormatter);
+  }
+
+  /** Creates a formatter for the given formatting mode. */
+  private RoasterSourceFormatter createFormatter(FormattingMode mode) {
+    return new RoasterSourceFormatter(logger, mode, formatterProfile);
   }
 
   /**
