@@ -171,6 +171,7 @@ public class CompilerArgumentsReader {
         .generateVarArgsHelpers(readOptionState(CompilerArgumentsEnum.GENERATE_VAR_ARGS_HELPERS))
         .generateStringFormatHelpers(
             readOptionState(CompilerArgumentsEnum.GENERATE_STRING_FORMAT_HELPERS))
+        .generateMapperHelpers(readOptionState(CompilerArgumentsEnum.GENERATE_MAPPER_HELPERS))
         .generateAddToCollectionHelpers(
             readOptionState(CompilerArgumentsEnum.GENERATE_ADD_TO_COLLECTION_HELPERS))
         .generateUnboxedOptional(readOptionState(CompilerArgumentsEnum.GENERATE_UNBOXED_OPTIONAL))

@@ -468,6 +468,28 @@ BookDto book = BookDtoBuilder.create()
 
 ---
 
+#### `generateMapperHelpers`
+
+**Default**: `DISABLED` | **Compiler Option**: `-Asimplebuilder.generateMapperHelpers=ENABLED|DISABLED`
+
+Generates `mapX(UnaryOperator<T>)` methods for every builder field. The mapper transforms the
+current value and returns the builder for continued fluent chaining.
+
+```java
+PersonDto person = PersonDtoBuilder.create()
+    .name("  bob ")
+    .mapName(String::trim)
+    .quantity(10)
+    .mapQuantity(q -> q * 2)
+    .build();
+```
+
+The field must be set before its mapper is called. Otherwise, the mapper throws
+`IllegalStateException`. Mapper helpers also work with `With` copy-and-modify operations because
+values copied from an existing instance count as set.
+
+---
+
 #### `generateAddToCollectionHelpers`
 
 **Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.generateAddToCollectionHelpers=ENABLED|DISABLED`
@@ -1396,6 +1418,7 @@ methodAccess = AccessModifier.PRIVATE
 # Helper Methods
 -Asimplebuilder.generateVarArgsHelpers=ENABLED|DISABLED
 -Asimplebuilder.generateStringFormatHelpers=ENABLED|DISABLED
+-Asimplebuilder.generateMapperHelpers=ENABLED|DISABLED
 -Asimplebuilder.generateAddToCollectionHelpers=ENABLED|DISABLED
 -Asimplebuilder.generateUnboxedOptional=ENABLED|DISABLED
 -Asimplebuilder.copyTypeAnnotations=ENABLED|DISABLED
@@ -1461,6 +1484,7 @@ methodAccess = AccessModifier.PRIVATE
     // Helper Methods
     generateVarArgsHelpers = OptionState.ENABLED,
     generateStringFormatHelpers = OptionState.ENABLED,
+    generateMapperHelpers = OptionState.DISABLED,
     generateUnboxedOptional = OptionState.ENABLED,
     
     // Collection Helpers

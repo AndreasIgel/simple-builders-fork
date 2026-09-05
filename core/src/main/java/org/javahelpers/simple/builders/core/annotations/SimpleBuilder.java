@@ -59,7 +59,8 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  *       PUBLIC)
  *   <li><b>Collection Helpers:</b> generateVarArgsHelpers, usingArrayListBuilder,
  *       usingArrayListBuilderWithElementBuilders, usingHashSetBuilder,
- *       usingHashSetBuilderWithElementBuilders, usingHashMapBuilder (all default: true)
+ *       usingHashSetBuilderWithElementBuilders, usingHashMapBuilder (all default: true);
+ *       generateMapperHelpers (default: false)
  *   <li><b>Integration:</b> generateWithInterface (default: true)
  *   <li><b>Documentation:</b> generateJavaDoc (default: true)
  * </ul>
@@ -330,6 +331,26 @@ public @interface SimpleBuilder {
      * Compiler option: -Asimplebuilder.generateStringFormatHelpers
      */
     OptionState generateStringFormatHelpers() default OptionState.UNSET;
+
+    /**
+     * Generate mapper helper methods for all fields. The generated method has the parameter type
+     * {@code UnaryOperator<T>} and transforms the current field value using the supplied operator.
+     * The field must already be set; otherwise the generated method throws {@link
+     * IllegalStateException}.
+     *
+     * <p>Example:
+     *
+     * <pre>{@code
+     * PersonDto person = PersonDtoBuilder.create()
+     *     .name("  bob ")
+     *     .mapName(String::trim)
+     *     .build();
+     * }</pre>
+     *
+     * <p>Default: DISABLED <br>
+     * Compiler option: -Asimplebuilder.generateMapperHelpers
+     */
+    OptionState generateMapperHelpers() default OptionState.UNSET;
 
     /**
      * Generate add2FieldName helper methods for List and Set fields. <br>

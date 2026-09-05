@@ -13,6 +13,7 @@ org.javahelpers.simple.builders.processor.generators.field.MapConsumerGenerator
 org.javahelpers.simple.builders.processor.generators.field.SetConsumerGenerator
 org.javahelpers.simple.builders.processor.generators.field.StringBuilderConsumerGenerator
 org.javahelpers.simple.builders.processor.generators.field.SupplierMethodGenerator
+org.javahelpers.simple.builders.processor.generators.field.MapperHelperGenerator
 org.javahelpers.simple.builders.processor.generators.field.VarArgsHelperGenerator
 org.javahelpers.simple.builders.processor.generators.field.AddToCollectionGenerator
 org.javahelpers.simple.builders.processor.generators.field.ArrayConversionGenerator
