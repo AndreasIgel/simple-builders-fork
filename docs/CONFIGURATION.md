@@ -12,6 +12,7 @@ Simple-builders supports fine-grained configuration through the `@SimpleBuilder.
   - [Maven Configuration](#maven-configuration)
   - [Gradle Configuration](#gradle-configuration)
   - [IntelliJ IDEA Configuration](#intellij-idea-configuration)
+  - [Command Line (-D)](#command-line--d)
 - [Configuration Options](#configuration-options)
   - [Field Setter Generation](#field-setter-generation)
   - [Conditional Logic](#conditional-logic)
@@ -220,6 +221,13 @@ compileJava {
    ```
    -Asimplebuilder.generateFieldSupplier=true -Asimplebuilder.builderAccess=PUBLIC
    ```
+
+### Command Line (-D)
+
+Maven supports compiler options without a `pom.xml` change, for example: `mvn compile -Dsimplebuilder.generateJavaDoc=DISABLED`.
+The precedence is `@SimpleBuilder.Options` > `-D` system property > `-A` compiler argument > default.
+The system property wins so you can override options configured in the build file from the command line without editing it.
+This relies on javac running in the build tool's JVM (the default for Maven and Gradle); use the `-A` form for forked compilation (`<fork>true</fork>` / `options.fork = true`) and IDE builds. Gradle also accepts `systemProp.simplebuilder.<option>=...` in `gradle.properties`; note that Gradle does not track the property as a task input, so run `clean` or `--rerun-tasks` after changing it.
 
 ## Configuration Options
 
@@ -1264,7 +1272,7 @@ Or in compiler options:
 
 ### Compiler Options Not Working
 
-1. **Check option names**: Ensure you're using the full option name (e.g., `-Asimplebuilder.generateFieldSupplier`)
+1. **Check option names**: Ensure you're using the full option name (e.g., `-Asimplebuilder.generateFieldSupplier`); Maven also supports the `-Dsimplebuilder.<option>` fallback
 2. **Verify processor is running**: Ensure annotation processor is configured correctly
 3. **Check IDE configuration**: Some IDEs need special configuration for compiler options
 4. **Clean and rebuild**: Run `mvn clean compile` to ensure fresh build

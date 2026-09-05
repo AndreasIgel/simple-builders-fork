@@ -52,17 +52,25 @@ public class CompilerArgumentsReader {
   /**
    * Reads the value of a compiler argument.
    *
-   * <p>The method looks up the compiler argument using both the full compiler argument name (with
-   * prefix) and the simple option name (without prefix) for backward compatibility.
+   * <p>The method checks the prefixed JVM system property first, then the prefixed compiler
+   * argument, and finally the bare option name for backward compatibility. The system property wins
+   * so a command-line {@code -D} can override options configured in the build file. The system
+   * property is available when the build tool runs javac in-process and is not available with
+   * {@code <fork>true</fork>}.
    *
    * @param argument the compiler argument enum to read
    * @return the value of the compiler argument, or null if not set
    */
   public String readValue(CompilerArgumentsEnum argument) {
-    // Try with full compiler argument name first (e.g., "simplebuilder.verbose")
-    String value = processingEnv.getOptions().get(argument.getCompilerArgument());
+    // Try the prefixed JVM system property first (e.g., "simplebuilder.verbose")
+    String value = System.getProperty(argument.getCompilerArgument());
 
-    // Fall back to simple option name for backward compatibility (e.g., "verbose")
+    // Fall back to the full compiler argument name (e.g., "simplebuilder.verbose")
+    if (value == null) {
+      value = processingEnv.getOptions().get(argument.getCompilerArgument());
+    }
+
+    // Finally, fall back to the simple option name for backward compatibility (e.g., "verbose")
     if (value == null) {
       value = processingEnv.getOptions().get(argument.getOptionName());
     }
@@ -130,6 +138,7 @@ public class CompilerArgumentsReader {
    *
    * <ul>
    *   <li>{@code -Asimplebuilder.generateFieldSupplier=true}
+   *   <li>{@code -Dsimplebuilder.generateFieldSupplier=true} as a system-property alternative
    *   <li>{@code -Asimplebuilder.builderAccess=public}
    *   <li>etc.
    * </ul>
