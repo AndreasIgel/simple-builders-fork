@@ -52,8 +52,10 @@ public class CompilerArgumentsReader {
   /**
    * Reads the value of a compiler argument.
    *
-   * <p>The method looks up the compiler argument using both the full compiler argument name (with
-   * prefix) and the simple option name (without prefix) for backward compatibility.
+   * <p>The method checks the prefixed compiler argument first, then the bare option name for
+   * backward compatibility, and finally the prefixed JVM system property. The system property
+   * fallback is available when Maven runs javac in-process and is not available with {@code
+   * <fork>true</fork>}.
    *
    * @param argument the compiler argument enum to read
    * @return the value of the compiler argument, or null if not set
@@ -65,6 +67,10 @@ public class CompilerArgumentsReader {
     // Fall back to simple option name for backward compatibility (e.g., "verbose")
     if (value == null) {
       value = processingEnv.getOptions().get(argument.getOptionName());
+    }
+
+    if (value == null) {
+      value = System.getProperty(argument.getCompilerArgument());
     }
 
     return value;
@@ -130,6 +136,7 @@ public class CompilerArgumentsReader {
    *
    * <ul>
    *   <li>{@code -Asimplebuilder.generateFieldSupplier=true}
+   *   <li>{@code -Dsimplebuilder.generateFieldSupplier=true} as a system-property alternative
    *   <li>{@code -Asimplebuilder.builderAccess=public}
    *   <li>etc.
    * </ul>

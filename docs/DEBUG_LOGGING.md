@@ -11,7 +11,9 @@ The Simple Builders annotation processor supports conditional debug logging that
 
 ## Enabling Debug Logging
 
-Debug logging uses `Diagnostic.Kind.OTHER` but is only activated when explicitly enabled via the compiler argument `-Averbose=true`.
+Debug logging uses `Diagnostic.Kind.OTHER` but is only activated when explicitly enabled via the compiler argument `-Averbose=true` or the Maven system property `-Dsimplebuilder.verbose=true`.
+
+When Maven runs javac in-process, `mvn clean compile -Dsimplebuilder.verbose=true` works without an `-Averbose=${simplebuilder.verbose}` mapping in `pom.xml`. The `-A` mapping remains the option for Gradle, IDEs, and forked compilation.
 
 ### Option 1: Via Maven Property (Recommended)
 

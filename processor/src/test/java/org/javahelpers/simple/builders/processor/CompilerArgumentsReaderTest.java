@@ -89,6 +89,47 @@ class CompilerArgumentsReaderTest {
         "Should fall back to simple option name");
   }
 
+  @Test
+  void readValue_SystemPropertySet_FallsBackToSystemProperty() {
+    System.setProperty("simplebuilder.verbose", "true");
+    try {
+      ProcessingEnvironment env = ProcessingEnvironmentStub.createEmpty();
+      CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
+
+      assertEquals("true", reader.readValue(CompilerArgumentsEnum.VERBOSE));
+      assertTrue(reader.readBooleanValue(CompilerArgumentsEnum.VERBOSE));
+    } finally {
+      System.clearProperty("simplebuilder.verbose");
+    }
+  }
+
+  @Test
+  void readValue_CompilerArgAndSystemPropertySet_PrefersCompilerArg() {
+    System.setProperty("simplebuilder.verbose", "true");
+    try {
+      ProcessingEnvironment env =
+          ProcessingEnvironmentStub.builder().put("simplebuilder.verbose", "false").build();
+      CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
+
+      assertEquals("false", reader.readValue(CompilerArgumentsEnum.VERBOSE));
+    } finally {
+      System.clearProperty("simplebuilder.verbose");
+    }
+  }
+
+  @Test
+  void readValue_BareNameSystemProperty_Ignored() {
+    System.setProperty("verbose", "true");
+    try {
+      ProcessingEnvironment env = ProcessingEnvironmentStub.createEmpty();
+      CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
+
+      assertNull(reader.readValue(CompilerArgumentsEnum.VERBOSE));
+    } finally {
+      System.clearProperty("verbose");
+    }
+  }
+
   /** Test: readBooleanValue returns false when value is null. */
   @Test
   void readBooleanValue_NullValue_ReturnsFalse() {
