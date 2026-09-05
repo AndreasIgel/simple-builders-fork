@@ -45,61 +45,17 @@ class ConfigurationProcessingTest {
    *   <li>Add the parameter to BuilderConfiguration record
    *   <li>Add builder methods in BuilderConfiguration.Builder
    *   <li>Update DEFAULT configuration
-   *   <li>Update this test to include the new option
+   *   <li>Update these tests to include the new option
    * </ol>
    */
   @Test
   void allConfigurationOptions_MustBeSettableViaBuilder() {
-    // This test will fail to compile if any builder method is missing
-    BuilderConfiguration config =
-        BuilderConfiguration.builder()
-            // Field setter generation options
-            .generateSupplier(OptionState.ENABLED)
-            .generateConsumer(OptionState.ENABLED)
-            .generateBuilderConsumer(OptionState.ENABLED)
-            // Conditional logic
-            .generateConditionalLogic(OptionState.ENABLED)
-            // Access control
-            .builderAccess(AccessModifier.PACKAGE_PRIVATE)
-            .builderConstructorAccess(AccessModifier.PRIVATE)
-            .methodAccess(AccessModifier.PACKAGE_PRIVATE)
-            // Helper method generation
-            .generateVarArgsHelpers(OptionState.ENABLED)
-            .generateStringFormatHelpers(OptionState.ENABLED)
-            .generateUnboxedOptional(OptionState.ENABLED)
-            .copyTypeAnnotations(OptionState.ENABLED)
-            // Collection builder options
-            .usingArrayListBuilder(OptionState.ENABLED)
-            .usingArrayListBuilderWithElementBuilders(OptionState.ENABLED)
-            .usingHashSetBuilder(OptionState.ENABLED)
-            .usingHashSetBuilderWithElementBuilders(OptionState.ENABLED)
-            .usingHashMapBuilder(OptionState.ENABLED)
-            // Annotations
-            .usingGeneratedAnnotation(OptionState.ENABLED)
-            .usingBuilderImplementationAnnotation(OptionState.ENABLED)
-            // Integration
-            .implementsBuilderBase(OptionState.ENABLED)
-            .generateWithInterface(OptionState.ENABLED)
-            .usingJacksonDeserializerAnnotation(OptionState.ENABLED)
-            .generateJacksonModule(OptionState.ENABLED)
-            // Documentation
-            .generateJavaDoc(OptionState.ENABLED)
-            // Naming
-            .builderSuffix("Builder")
-            .setterSuffix("")
-            // Formatting
-            .formattingMode("lightweight")
-            .build();
-
-    // Verify all options are accessible (this will fail to compile if accessors are missing)
+    BuilderConfiguration config = buildFullyConfigured();
     assertNotNull(config);
     assertEquals(OptionState.ENABLED, config.generateFieldSupplier());
     assertEquals(OptionState.ENABLED, config.generateFieldConsumer());
     assertEquals(OptionState.ENABLED, config.generateBuilderConsumer());
     assertEquals(OptionState.ENABLED, config.generateConditionalHelper());
-    assertEquals(AccessModifier.PACKAGE_PRIVATE, config.getBuilderAccess());
-    assertEquals(AccessModifier.PRIVATE, config.getBuilderConstructorAccess());
-    assertEquals(AccessModifier.PACKAGE_PRIVATE, config.getMethodAccess());
     assertEquals(OptionState.ENABLED, config.generateVarArgsHelpers());
     assertEquals(OptionState.ENABLED, config.generateStringFormatHelpers());
     assertEquals(OptionState.ENABLED, config.generateUnboxedOptional());
@@ -116,9 +72,59 @@ class ConfigurationProcessingTest {
     assertEquals(OptionState.ENABLED, config.usingJacksonDeserializerAnnotation());
     assertEquals(OptionState.ENABLED, config.generateJacksonModule());
     assertEquals(OptionState.ENABLED, config.generateJavaDoc());
+  }
+
+  @Test
+  void allConfigurationOptions_AccessNamingAndFormatting_MustBeReadable() {
+    BuilderConfiguration config = buildFullyConfigured();
+
+    assertEquals(AccessModifier.PACKAGE_PRIVATE, config.getBuilderAccess());
+    assertEquals(AccessModifier.PRIVATE, config.getBuilderConstructorAccess());
+    assertEquals(AccessModifier.PACKAGE_PRIVATE, config.getMethodAccess());
     assertEquals("Builder", config.getBuilderSuffix());
     assertEquals("", config.getSetterSuffix());
     assertEquals("lightweight", config.formattingMode());
+  }
+
+  private static BuilderConfiguration buildFullyConfigured() {
+    return BuilderConfiguration.builder()
+        // Field setter generation options
+        .generateSupplier(OptionState.ENABLED)
+        .generateConsumer(OptionState.ENABLED)
+        .generateBuilderConsumer(OptionState.ENABLED)
+        // Conditional logic
+        .generateConditionalLogic(OptionState.ENABLED)
+        // Access control
+        .builderAccess(AccessModifier.PACKAGE_PRIVATE)
+        .builderConstructorAccess(AccessModifier.PRIVATE)
+        .methodAccess(AccessModifier.PACKAGE_PRIVATE)
+        // Helper method generation
+        .generateVarArgsHelpers(OptionState.ENABLED)
+        .generateStringFormatHelpers(OptionState.ENABLED)
+        .generateUnboxedOptional(OptionState.ENABLED)
+        .copyTypeAnnotations(OptionState.ENABLED)
+        // Collection builder options
+        .usingArrayListBuilder(OptionState.ENABLED)
+        .usingArrayListBuilderWithElementBuilders(OptionState.ENABLED)
+        .usingHashSetBuilder(OptionState.ENABLED)
+        .usingHashSetBuilderWithElementBuilders(OptionState.ENABLED)
+        .usingHashMapBuilder(OptionState.ENABLED)
+        // Annotations
+        .usingGeneratedAnnotation(OptionState.ENABLED)
+        .usingBuilderImplementationAnnotation(OptionState.ENABLED)
+        // Integration
+        .implementsBuilderBase(OptionState.ENABLED)
+        .generateWithInterface(OptionState.ENABLED)
+        .usingJacksonDeserializerAnnotation(OptionState.ENABLED)
+        .generateJacksonModule(OptionState.ENABLED)
+        // Documentation
+        .generateJavaDoc(OptionState.ENABLED)
+        // Naming
+        .builderSuffix("Builder")
+        .setterSuffix("")
+        // Formatting
+        .formattingMode("lightweight")
+        .build();
   }
 
   /**

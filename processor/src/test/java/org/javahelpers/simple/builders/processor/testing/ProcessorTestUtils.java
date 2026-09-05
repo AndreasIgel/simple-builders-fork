@@ -16,6 +16,12 @@ import org.javahelpers.simple.builders.processor.BuilderProcessor;
  */
 public final class ProcessorTestUtils {
 
+  private static final Pattern PACKAGE_PATTERN =
+      Pattern.compile("(?m)^\\s*package\\s+([a-zA-Z_]\\w*(?:\\.[a-zA-Z_]\\w*)*)\\s*;");
+  private static final Pattern TOP_LEVEL_TYPE_PATTERN =
+      Pattern.compile(
+          "(?m)^[ \\t]*(?:(?:public|protected|private|abstract|final|static|sealed|non-sealed|strictfp)\\s+)*(?:@?interface|class|enum|record)\\s+([A-Za-z_]\\w*)\\b");
+
   private ProcessorTestUtils() {}
 
   /**
@@ -184,17 +190,12 @@ public final class ProcessorTestUtils {
   }
 
   private static String extractPackageName(String source) {
-    Matcher m =
-        Pattern.compile("(?m)^\\s*package\\s+([a-zA-Z_]\\w*(?:\\.[a-zA-Z_]\\w*)*)\\s*;")
-            .matcher(source);
+    Matcher m = PACKAGE_PATTERN.matcher(source);
     return m.find() ? m.group(1) : null;
   }
 
   private static String extractTopLevelTypeName(String source) {
-    Matcher m =
-        Pattern.compile(
-                "(?m)^\\s*(?:public|protected|private)?(?:\\s+(?:abstract|final|static|sealed|non-sealed|strictfp))*\\s*(?:@?interface|class|enum|record)\\s+([A-Za-z_]\\w*)\\b")
-            .matcher(source);
+    Matcher m = TOP_LEVEL_TYPE_PATTERN.matcher(source);
     return m.find() ? m.group(1) : null;
   }
 
