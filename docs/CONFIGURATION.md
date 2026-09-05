@@ -12,7 +12,7 @@ Simple-builders supports fine-grained configuration through the `@SimpleBuilder.
   - [Maven Configuration](#maven-configuration)
   - [Gradle Configuration](#gradle-configuration)
   - [IntelliJ IDEA Configuration](#intellij-idea-configuration)
-  - [Command Line (Maven -D)](#command-line-maven--d)
+  - [Command Line (-D)](#command-line--d)
 - [Configuration Options](#configuration-options)
   - [Field Setter Generation](#field-setter-generation)
   - [Conditional Logic](#conditional-logic)
@@ -222,11 +222,12 @@ compileJava {
    -Asimplebuilder.generateFieldSupplier=true -Asimplebuilder.builderAccess=PUBLIC
    ```
 
-### Command Line (Maven -D)
+### Command Line (-D)
 
 Maven supports compiler options without a `pom.xml` change, for example: `mvn compile -Dsimplebuilder.generateJavaDoc=DISABLED`.
-The precedence is `@SimpleBuilder.Options` > `-A` compiler argument > `-D` system property > default.
-This relies on javac running inside the Maven JVM (the default); use the `-A` form for Gradle, IDE builds, and forked compilation.
+The precedence is `@SimpleBuilder.Options` > `-D` system property > `-A` compiler argument > default.
+The system property wins so you can override options configured in the build file from the command line without editing it.
+This relies on javac running in the build tool's JVM (the default for Maven and Gradle); use the `-A` form for forked compilation (`<fork>true</fork>` / `options.fork = true`) and IDE builds. Gradle also accepts `systemProp.simplebuilder.<option>=...` in `gradle.properties`; note that Gradle does not track the property as a task input, so run `clean` or `--rerun-tasks` after changing it.
 
 ## Configuration Options
 

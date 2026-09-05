@@ -104,14 +104,14 @@ class CompilerArgumentsReaderTest {
   }
 
   @Test
-  void readValue_CompilerArgAndSystemPropertySet_PrefersCompilerArg() {
+  void readValue_CompilerArgAndSystemPropertySet_PrefersSystemProperty() {
     System.setProperty("simplebuilder.verbose", "true");
     try {
       ProcessingEnvironment env =
           ProcessingEnvironmentStub.builder().put("simplebuilder.verbose", "false").build();
       CompilerArgumentsReader reader = new CompilerArgumentsReader(env);
 
-      assertEquals("false", reader.readValue(CompilerArgumentsEnum.VERBOSE));
+      assertEquals("true", reader.readValue(CompilerArgumentsEnum.VERBOSE));
     } finally {
       System.clearProperty("simplebuilder.verbose");
     }
