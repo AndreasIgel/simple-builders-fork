@@ -420,54 +420,46 @@ public final class RoasterSourceFormatter {
   }
 
   private Properties loadFormatterProperties() {
-    try (InputStream inputStream = openProfileStream(formatterProfileResource)) {
-      if (inputStream == null) {
-        logger.warning(
-            "simple-builders: Eclipse formatter profile '%s' was not found as a file or classpath resource; falling back to the bundled profile.",
-            formatterProfileResource);
-        return loadBundledFormatterProperties();
-      }
-      return tryLoad(inputStream, formatterProfileResource)
-          .orElseGet(
-              () ->
-                  DEFAULT_FORMATTER_PROFILE_RESOURCE.equals(formatterProfileResource)
-                      ? new Properties()
-                      : loadBundledFormatterProperties());
-    } catch (IOException ex) {
-      logger.warning(
-          "simple-builders: Failed to load Eclipse formatter profile '%s': %s",
-          formatterProfileResource,
-          StringUtils.defaultIfBlank(ex.getMessage(), ex.getClass().getSimpleName()));
-      return loadBundledFormatterProperties();
+    boolean fallbackToBundled =
+        !DEFAULT_FORMATTER_PROFILE_RESOURCE.equals(formatterProfileResource);
+    Optional<Properties> configured = loadProfile(formatterProfileResource, fallbackToBundled);
+    if (configured.isEmpty() && fallbackToBundled) {
+      configured = loadProfile(DEFAULT_FORMATTER_PROFILE_RESOURCE, false);
     }
+    return configured.orElseGet(Properties::new);
   }
 
-  private Properties loadBundledFormatterProperties() {
-    try (InputStream inputStream = openProfileStream(DEFAULT_FORMATTER_PROFILE_RESOURCE)) {
+  /**
+   * Opens {@code location} as a regular file first, then as a classpath resource; logs and returns
+   * empty on any failure.
+   *
+   * @param location file system path or classpath resource
+   * @param fallbackToBundled whether loading failure will fall back to the bundled profile
+   * @return the loaded formatter properties, or empty when loading fails
+   */
+  private Optional<Properties> loadProfile(String location, boolean fallbackToBundled) {
+    String fallbackSuffix = fallbackToBundled ? "; falling back to the bundled profile." : ".";
+    try (InputStream inputStream = openProfileStream(location)) {
       if (inputStream == null) {
-        logger.warning(
-            "simple-builders: Bundled Eclipse formatter profile '%s' was not found on the processor classpath.",
-            DEFAULT_FORMATTER_PROFILE_RESOURCE);
-        return new Properties();
+        if (DEFAULT_FORMATTER_PROFILE_RESOURCE.equals(location)) {
+          logger.warning(
+              "simple-builders: Bundled Eclipse formatter profile '%s' was not found on the processor classpath%s",
+              location, fallbackSuffix);
+        } else {
+          logger.warning(
+              "simple-builders: Eclipse formatter profile '%s' was not found as a file or classpath resource%s",
+              location, fallbackSuffix);
+        }
+        return Optional.empty();
       }
-      return tryLoad(inputStream, DEFAULT_FORMATTER_PROFILE_RESOURCE).orElseGet(Properties::new);
-    } catch (IOException ex) {
-      logger.warning(
-          "simple-builders: Failed to load Eclipse formatter profile '%s': %s",
-          DEFAULT_FORMATTER_PROFILE_RESOURCE,
-          StringUtils.defaultIfBlank(ex.getMessage(), ex.getClass().getSimpleName()));
-      return new Properties();
-    }
-  }
-
-  private Optional<Properties> tryLoad(InputStream inputStream, String location) {
-    try {
       FormatterProfileReader profileReader = FormatterProfileReader.fromEclipseXml(inputStream);
       return Optional.of(profileReader.getDefaultProperties());
     } catch (IOException | RuntimeException ex) {
       logger.warning(
           "simple-builders: Failed to load Eclipse formatter profile '%s': %s",
-          location, StringUtils.defaultIfBlank(ex.getMessage(), ex.getClass().getSimpleName()));
+          location,
+          StringUtils.defaultIfBlank(ex.getMessage(), ex.getClass().getSimpleName())
+              + fallbackSuffix);
       return Optional.empty();
     }
   }
