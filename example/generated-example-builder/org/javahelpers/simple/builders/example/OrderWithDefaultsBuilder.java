@@ -6,6 +6,7 @@ import static org.javahelpers.simple.builders.core.util.TrackedValue.unsetValue;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import javax.annotation.processing.Generated;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.javahelpers.simple.builders.core.annotations.BuilderImplementation;
@@ -28,12 +29,15 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .id("example value")
  *     .id("Hello %s", "World")
  *     .id(() -> "example value")
+ *     .mapId(value -> value)
  *     .id(sb -> sb.append("text"))
  *     .priority(42)
  *     .priority(() -> 42)
+ *     .mapPriority(value -> value)
  *     .status("example value")
  *     .status("Hello %s", "World")
  *     .status(() -> "example value")
+ *     .mapStatus(value -> value)
  *     .status(sb -> sb.append("text"))
  *     .build();
  * }</pre>
@@ -164,6 +168,84 @@ public class OrderWithDefaultsBuilder implements IBuilderBase<OrderWithDefaults>
    */
   public OrderWithDefaultsBuilder id(String format, Object... args) {
     this.id = changedValue(String.format(format, args));
+    return this;
+  }
+
+  /**
+   * Transforms the current value of <code>id</code> in place by applying the given operator, instead of reading it out,
+   * changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link OrderWithDefaults#setId(String) setId(String id)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.mapId(value -> value);
+   * }</pre>
+   * 
+   * @param idMapper operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>id</code> has not been set yet
+   */
+  public OrderWithDefaultsBuilder mapId(UnaryOperator<String> idMapper) {
+    if (!this.id.isSet()) {
+      throw new IllegalStateException("Cannot map 'id' before it is set");
+    }
+    this.id = changedValue(idMapper.apply(this.id.value()));
+    return this;
+  }
+
+  /**
+   * Transforms the current value of <code>priority</code> in place by applying the given operator, instead of reading
+   * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link OrderWithDefaults#setPriority(int) setPriority(int priority)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.mapPriority(value -> value);
+   * }</pre>
+   * 
+   * @param priorityMapper operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>priority</code> has not been set yet
+   */
+  public OrderWithDefaultsBuilder mapPriority(UnaryOperator<Integer> priorityMapper) {
+    if (!this.priority.isSet()) {
+      throw new IllegalStateException("Cannot map 'priority' before it is set");
+    }
+    this.priority = changedValue(priorityMapper.apply(this.priority.value()));
+    return this;
+  }
+
+  /**
+   * Transforms the current value of <code>status</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance).
+   * <p>
+   * Generated from setter {@link OrderWithDefaults#setStatus(String) setStatus(String status)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.mapStatus(value -> value);
+   * }</pre>
+   * 
+   * @param statusMapper operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>status</code> has not been set yet
+   */
+  public OrderWithDefaultsBuilder mapStatus(UnaryOperator<String> statusMapper) {
+    if (!this.status.isSet()) {
+      throw new IllegalStateException("Cannot map 'status' before it is set");
+    }
+    this.status = changedValue(statusMapper.apply(this.status.value()));
     return this;
   }
 

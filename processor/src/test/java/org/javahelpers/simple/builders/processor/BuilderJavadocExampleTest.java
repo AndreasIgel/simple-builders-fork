@@ -57,7 +57,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 class BuilderJavadocExampleTest {
 
   protected Compilation compile(JavaFileObject... sourceFiles) {
-    return ProcessorTestUtils.createCompiler().compile(sourceFiles);
+    return ProcessorTestUtils.createCompiler()
+        .withOptions("-Asimplebuilder.generateMapperHelpers=DISABLED")
+        .compile(sourceFiles);
   }
 
   @Test

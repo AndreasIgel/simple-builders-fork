@@ -49,14 +49,28 @@ import org.javahelpers.simple.builders.processor.testing.ProcessorTestUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** Tests for opt-in {@code mapX(UnaryOperator<T>)} helper generation. */
+/** Tests for {@code mapX(UnaryOperator<T>)} helper generation. */
 class MapperHelperGeneratorTest {
 
   @TempDir Path tempDirectory;
 
   @Test
-  void mapperHelpers_DefaultDisabled_DoesNotGenerateMethods() {
+  void mapperHelpers_DefaultEnabled_GeneratesMethods() {
     Compilation compilation = ProcessorTestUtils.createCompiler().compile(personSource());
+
+    assertThat(compilation).succeeded();
+    String generated = loadGeneratedSource(compilation, "PersonDtoBuilder");
+
+    ProcessorAsserts.assertContaining(generated, "mapName(");
+    ProcessorAsserts.assertContaining(generated, "mapQuantity(");
+  }
+
+  @Test
+  void mapperHelpers_DisabledByCompilerOption_DoesNotGenerateMethods() {
+    Compilation compilation =
+        ProcessorTestUtils.createCompiler()
+            .withOptions("-Asimplebuilder.generateMapperHelpers=DISABLED")
+            .compile(personSource());
 
     assertThat(compilation).succeeded();
     String generated = loadGeneratedSource(compilation, "PersonDtoBuilder");
@@ -214,6 +228,90 @@ class MapperHelperGeneratorTest {
     ProcessorAsserts.assertNotContaining(generated, "mapQuantity(");
   }
 
+  @Test
+  void mapperHelpers_SameSignatureCollision_PlainSetterWins() {
+    JavaFileObject source =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            import java.util.function.UnaryOperator;
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public record CollisionDto(String test, UnaryOperator<String> mapTest) {}
+            """);
+
+    Compilation compilation = ProcessorTestUtils.createCompiler().compile(source);
+
+    assertThat(compilation).succeeded();
+    String generated = loadGeneratedSource(compilation, "CollisionDtoBuilder");
+    long conflictWarnings =
+        compilation.diagnostics().stream()
+            .filter(diagnostic -> diagnostic.getKind() == javax.tools.Diagnostic.Kind.WARNING)
+            .filter(diagnostic -> diagnostic.getMessage(null).contains("Method conflict resolved"))
+            .count();
+
+    assertTrue(conflictWarnings > 0, "Expected a mapper/setter conflict warning");
+    ProcessorAsserts.assertContaining(generated, "mapTest(UnaryOperator<String> mapTest)");
+    ProcessorAsserts.assertNotContaining(generated, "mapTest(UnaryOperator<String> testMapper)");
+    ProcessorAsserts.assertContaining(
+        generated, "mapMapTest(UnaryOperator<UnaryOperator<String>> mapTestMapper)");
+  }
+
+  @Test
+  void mapperHelpers_SameSignatureCollision_PlainSetterCanBeCalled() throws Exception {
+    try (URLClassLoader classLoader = compileRuntimeCollision()) {
+      Class<?> builderClass = classLoader.loadClass("test.CollisionDtoBuilder");
+      Object builder = builderClass.getMethod("create").invoke(null);
+      UnaryOperator<String> mapper = String::trim;
+
+      builderClass.getMethod("mapTest", UnaryOperator.class).invoke(builder, mapper);
+
+      Object dto = builderClass.getMethod("build").invoke(builder);
+      assertEquals(mapper, dto.getClass().getMethod("mapTest").invoke(dto));
+    }
+  }
+
+  @Test
+  void mapperHelpers_DifferentTypeCollision_GeneratesBothMethods() {
+    JavaFileObject source =
+        ProcessorTestUtils.forSource(
+            """
+            package test;
+
+            import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+            @SimpleBuilder
+            public record DifferentTypeDto(String test, String mapTest) {}
+            """);
+
+    Compilation compilation = ProcessorTestUtils.createCompiler().compile(source);
+
+    assertThat(compilation).succeeded();
+    String generated = loadGeneratedSource(compilation, "DifferentTypeDtoBuilder");
+
+    ProcessorAsserts.assertContaining(generated, "mapTest(String mapTest)");
+    ProcessorAsserts.assertContaining(generated, "mapTest(UnaryOperator<String> testMapper)");
+  }
+
+  @Test
+  void mapperHelpers_DifferentTypeCollision_BothMethodsCanBeCalled() throws Exception {
+    try (URLClassLoader classLoader = compileRuntimeDifferentType()) {
+      Class<?> builderClass = classLoader.loadClass("test.DifferentTypeDtoBuilder");
+      Object builder = builderClass.getMethod("create").invoke(null);
+      builderClass.getMethod("test", String.class).invoke(builder, "  bob ");
+      builderClass.getMethod("mapTest", String.class).invoke(builder, "mapped");
+      builderClass
+          .getMethod("mapTest", UnaryOperator.class)
+          .invoke(builder, (UnaryOperator<String>) String::trim);
+
+      Object dto = builderClass.getMethod("build").invoke(builder);
+      assertEquals("bob", dto.getClass().getMethod("test").invoke(dto));
+      assertEquals("mapped", dto.getClass().getMethod("mapTest").invoke(dto));
+    }
+  }
+
   private static JavaFileObject personSource() {
     return ProcessorTestUtils.forSource(
         """
@@ -252,6 +350,33 @@ class MapperHelperGeneratorTest {
             generateMapperHelpers = OptionState.ENABLED,
             generateWithInterface = OptionState.ENABLED))
         public record PersonWith(String name) implements PersonWithBuilder.With {}
+        """);
+  }
+
+  private URLClassLoader compileRuntimeCollision() throws Exception {
+    return compileRuntimeSource(
+        "CollisionDto.java",
+        """
+        package test;
+
+        import java.util.function.UnaryOperator;
+        import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+        @SimpleBuilder
+        public record CollisionDto(String test, UnaryOperator<String> mapTest) {}
+        """);
+  }
+
+  private URLClassLoader compileRuntimeDifferentType() throws Exception {
+    return compileRuntimeSource(
+        "DifferentTypeDto.java",
+        """
+        package test;
+
+        import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
+
+        @SimpleBuilder
+        public record DifferentTypeDto(String test, String mapTest) {}
         """);
   }
 

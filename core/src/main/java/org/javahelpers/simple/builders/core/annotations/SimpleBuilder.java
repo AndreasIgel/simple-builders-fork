@@ -57,10 +57,9 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  *   <li><b>Conditional Logic:</b> generateConditionalHelper (default: true)
  *   <li><b>Access Control:</b> builderAccess, builderConstructorAccess, methodAccess (default:
  *       PUBLIC)
- *   <li><b>Collection Helpers:</b> generateVarArgsHelpers, usingArrayListBuilder,
- *       usingArrayListBuilderWithElementBuilders, usingHashSetBuilder,
- *       usingHashSetBuilderWithElementBuilders, usingHashMapBuilder (all default: true);
- *       generateMapperHelpers (default: false)
+ *   <li><b>Collection Helpers:</b> generateVarArgsHelpers, generateMapperHelpers,
+ *       usingArrayListBuilder, usingArrayListBuilderWithElementBuilders, usingHashSetBuilder,
+ *       usingHashSetBuilderWithElementBuilders, usingHashMapBuilder (all default: true)
  *   <li><b>Integration:</b> generateWithInterface (default: true)
  *   <li><b>Documentation:</b> generateJavaDoc (default: true)
  * </ul>
@@ -347,7 +346,7 @@ public @interface SimpleBuilder {
      *     .build();
      * }</pre>
      *
-     * <p>Default: DISABLED <br>
+     * <p>Default: ENABLED <br>
      * Compiler option: -Asimplebuilder.generateMapperHelpers
      */
     OptionState generateMapperHelpers() default OptionState.UNSET;

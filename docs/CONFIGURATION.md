@@ -102,6 +102,7 @@ Create reusable configuration presets with custom template annotations. The buil
     generateConditionalHelper = OptionState.DISABLED,
     generateVarArgsHelpers = OptionState.DISABLED,
     generateStringFormatHelpers = OptionState.DISABLED,
+    generateMapperHelpers = OptionState.DISABLED,
     generateAddToCollectionHelpers = OptionState.DISABLED,
     generateUnboxedOptional = OptionState.DISABLED,
     copyTypeAnnotations = OptionState.DISABLED,
@@ -470,7 +471,7 @@ BookDto book = BookDtoBuilder.create()
 
 #### `generateMapperHelpers`
 
-**Default**: `DISABLED` | **Compiler Option**: `-Asimplebuilder.generateMapperHelpers=ENABLED|DISABLED`
+**Default**: `ENABLED` | **Compiler Option**: `-Asimplebuilder.generateMapperHelpers=ENABLED|DISABLED`
 
 Generates `mapX(UnaryOperator<T>)` methods for every builder field. The mapper transforms the
 current value and returns the builder for continued fluent chaining.
@@ -487,6 +488,11 @@ PersonDto person = PersonDtoBuilder.create()
 The field must be set before its mapper is called. Otherwise, the mapper throws
 `IllegalStateException`. Mapper helpers also work with `With` copy-and-modify operations because
 values copied from an existing instance count as set.
+
+If a DTO field already has a setter with the same signature as a generated mapper, the setter
+wins and the mapper is omitted with a conflict warning.
+
+**When DISABLED**: No mapper methods are generated.
 
 ---
 
@@ -1155,6 +1161,7 @@ The built-in `@SimpleMinimalBuilder` is the simplest way to get a lightweight bu
     generateConditionalHelper = OptionState.DISABLED,
     generateVarArgsHelpers = OptionState.DISABLED,
     generateStringFormatHelpers = OptionState.DISABLED,
+    generateMapperHelpers = OptionState.DISABLED,
     generateAddToCollectionHelpers = OptionState.DISABLED,
     generateUnboxedOptional = OptionState.DISABLED,
     copyTypeAnnotations = OptionState.DISABLED,
@@ -1484,7 +1491,7 @@ methodAccess = AccessModifier.PRIVATE
     // Helper Methods
     generateVarArgsHelpers = OptionState.ENABLED,
     generateStringFormatHelpers = OptionState.ENABLED,
-    generateMapperHelpers = OptionState.DISABLED,
+    generateMapperHelpers = OptionState.ENABLED,
     generateUnboxedOptional = OptionState.ENABLED,
     
     // Collection Helpers

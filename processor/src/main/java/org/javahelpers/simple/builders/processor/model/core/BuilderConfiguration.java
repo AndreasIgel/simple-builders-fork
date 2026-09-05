@@ -114,7 +114,7 @@ public record BuilderConfiguration(
           .methodAccess(PUBLIC)
           .generateVarArgsHelpers(ENABLED)
           .generateStringFormatHelpers(ENABLED)
-          .generateMapperHelpers(DISABLED)
+          .generateMapperHelpers(ENABLED)
           .generateAddToCollectionHelpers(ENABLED)
           .generateUnboxedOptional(ENABLED)
           .copyTypeAnnotations(ENABLED)

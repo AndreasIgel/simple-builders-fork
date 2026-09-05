@@ -374,7 +374,9 @@ class ConfigurationProcessingTest {
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
             import org.javahelpers.simple.builders.core.enums.OptionState;
 
-            @SimpleBuilder(options = @SimpleBuilder.Options(generateJavaDoc = OptionState.DISABLED))
+            @SimpleBuilder(options = @SimpleBuilder.Options(
+                generateJavaDoc = OptionState.DISABLED,
+                generateMapperHelpers = OptionState.DISABLED))
             public class PersonDto {
                 private String name;
 
@@ -645,7 +647,7 @@ class ConfigurationProcessingTest {
   void configurationMerge_Chain_ShouldApplyInOrder() {
     // Layer 1: Defaults
     BuilderConfiguration defaults = BuilderConfiguration.DEFAULT;
-    assertEquals(OptionState.DISABLED, defaults.generateMapperHelpers());
+    assertEquals(OptionState.ENABLED, defaults.generateMapperHelpers());
 
     // Layer 2: Compiler arguments (override some defaults)
     BuilderConfiguration compilerArgs =

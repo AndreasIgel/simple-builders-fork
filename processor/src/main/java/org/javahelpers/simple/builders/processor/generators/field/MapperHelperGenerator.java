@@ -44,10 +44,15 @@ import org.javahelpers.simple.builders.processor.model.type.TypeNameGeneric;
 import org.javahelpers.simple.builders.processor.processing.ProcessingContext;
 
 /**
- * Generates opt-in mapper helper methods for builder fields.
+ * Generates mapper helper methods for builder fields.
  *
- * <p>Each generated method accepts a {@code UnaryOperator<T>} and applies it to the field's current
- * value. Throws {@link IllegalStateException} if the value has not been set yet.
+ * <p>This generator is enabled by default and can be deactivated by setting the configuration flag
+ * {@code generateMapperHelpers} to {@code DISABLED}. Each generated method accepts a {@code
+ * UnaryOperator<T>} and applies it to the field's current value. Throws {@link
+ * IllegalStateException} if the value has not been set yet.
+ *
+ * <p>If a DTO already has a field whose setter has the same signature, the setter wins and the
+ * mapper is skipped with a warning.
  *
  * <h3>Example to demonstrate the generated methods</h3>
  *
@@ -107,11 +112,20 @@ public class MapperHelperGenerator implements MethodGenerator {
     methodDto.setPriority(BuilderMethodDto.PRIORITY_LOW);
     methodDto.setJavadoc(
         new JavadocDto(
-                "Transforms the current value of <code>%s</code> by applying the given operator.",
+                "Transforms the current value of <code>%s</code> in place by applying the given "
+                    + "operator, instead of reading it out, changing it and setting it again.\n"
+                    + "Useful for adjustments relative to the current value, e.g. trimming, "
+                    + "upper-casing, clamping or incrementing, and in combination with the "
+                    + "<code>With</code> copy-and-modify flow.\n"
+                    + "The value must have been set before (directly or via an existing instance).",
                 originalFieldName)
-            .addParam(parameterName, "operator used to transform the current value")
+            .addParam(
+                parameterName,
+                "operator applied to the current value; its result becomes the new value")
             .addReturn(JavadocConstants.RETURN_BUILDER_INSTANCE)
-            .addThrows("IllegalStateException", "if the field is unset"));
+            .addThrows(
+                "IllegalStateException",
+                "if <code>%s</code> has not been set yet".formatted(originalFieldName)));
 
     addExampleChainFragmentTemplate(methodDto, "#{methodName}(value -> value)");
     return Collections.singletonList(methodDto);
