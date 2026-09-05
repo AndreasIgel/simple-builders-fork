@@ -66,6 +66,7 @@ class ConfigurationProcessingTest {
             // Helper method generation
             .generateVarArgsHelpers(OptionState.ENABLED)
             .generateStringFormatHelpers(OptionState.ENABLED)
+            .generateMapperHelpers(OptionState.ENABLED)
             .generateUnboxedOptional(OptionState.ENABLED)
             .copyTypeAnnotations(OptionState.ENABLED)
             // Collection builder options
@@ -102,6 +103,7 @@ class ConfigurationProcessingTest {
     assertEquals(AccessModifier.PACKAGE_PRIVATE, config.getMethodAccess());
     assertEquals(OptionState.ENABLED, config.generateVarArgsHelpers());
     assertEquals(OptionState.ENABLED, config.generateStringFormatHelpers());
+    assertEquals(OptionState.ENABLED, config.generateMapperHelpers());
     assertEquals(OptionState.ENABLED, config.generateUnboxedOptional());
     assertEquals(OptionState.ENABLED, config.copyTypeAnnotations());
     assertEquals(OptionState.ENABLED, config.usingArrayListBuilder());
@@ -210,6 +212,7 @@ class ConfigurationProcessingTest {
                 "-Asimplebuilder.methodAccess=PACKAGE_PRIVATE",
                 "-Asimplebuilder.generateVarArgsHelpers=false",
                 "-Asimplebuilder.generateStringFormatHelpers=false",
+                "-Asimplebuilder.generateMapperHelpers=false",
                 "-Asimplebuilder.generateUnboxedOptional=false",
                 "-Asimplebuilder.copyTypeAnnotations=false",
                 "-Asimplebuilder.usingArrayListBuilder=false",
@@ -371,7 +374,9 @@ class ConfigurationProcessingTest {
             import org.javahelpers.simple.builders.core.annotations.SimpleBuilder;
             import org.javahelpers.simple.builders.core.enums.OptionState;
 
-            @SimpleBuilder(options = @SimpleBuilder.Options(generateJavaDoc = OptionState.DISABLED))
+            @SimpleBuilder(options = @SimpleBuilder.Options(
+                generateJavaDoc = OptionState.DISABLED,
+                generateMapperHelpers = OptionState.DISABLED))
             public class PersonDto {
                 private String name;
 
@@ -642,6 +647,7 @@ class ConfigurationProcessingTest {
   void configurationMerge_Chain_ShouldApplyInOrder() {
     // Layer 1: Defaults
     BuilderConfiguration defaults = BuilderConfiguration.DEFAULT;
+    assertEquals(OptionState.ENABLED, defaults.generateMapperHelpers());
 
     // Layer 2: Compiler arguments (override some defaults)
     BuilderConfiguration compilerArgs =

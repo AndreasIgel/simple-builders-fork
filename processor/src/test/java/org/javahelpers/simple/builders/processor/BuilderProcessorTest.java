@@ -81,7 +81,9 @@ class BuilderProcessorTest {
 
     // When: Compile with verbose=true to enable debug logging
     Compilation compilation =
-        ProcessorTestUtils.createCompiler().withOptions("-Averbose=true").compile(sourceFile);
+        ProcessorTestUtils.createCompiler()
+            .withOptions("-Averbose=true", "-Asimplebuilder.generateMapperHelpers=DISABLED")
+            .compile(sourceFile);
 
     // Then: Compilation succeeds and debug messages are present
     assertThat(compilation).succeeded();
@@ -90,10 +92,11 @@ class BuilderProcessorTest {
     ProcessorAsserts.assertHadNoteContaining(
         compilation,
         "[DEBUG] Starting BuilderProcessor...",
-        "[DEBUG] Loaded global configuration from compiler arguments: BuilderConfiguration[]",
+        "[DEBUG] Loaded global configuration from compiler arguments: "
+            + "BuilderConfiguration[generateMapperHelpers=DISABLED]",
         "[DEBUG] Initializing generator registry",
-        "[DEBUG] ├─ Loaded 14 method generators and 9 builder enhancers total",
-        "[DEBUG] └─ Initialized GeneratorRegistry with 14 method generators and 9 builder",
+        "[DEBUG] ├─ Loaded 15 method generators and 9 builder enhancers total",
+        "[DEBUG] └─ Initialized GeneratorRegistry with 15 method generators and 9 builder",
         "simple-builders: PROCESSING ROUND START",
         "[DEBUG] simple-builders: Processing round started. Found 1 annotated elements.",
         "[DEBUG] Processing element: VerboseTest",
@@ -1455,7 +1458,9 @@ class BuilderProcessorTest {
   }
 
   protected Compilation compile(JavaFileObject... sourceFiles) {
-    return ProcessorTestUtils.createCompiler().compile(sourceFiles);
+    return ProcessorTestUtils.createCompiler()
+        .withOptions("-Asimplebuilder.generateMapperHelpers=DISABLED")
+        .compile(sourceFiles);
   }
 
   @Test

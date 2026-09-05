@@ -307,6 +307,8 @@ public class BuilderConfigurationReader {
             builder.generateVarArgsHelpers(OptionState.valueOf(enumValue));
         case "generateStringFormatHelpers" ->
             builder.generateStringFormatHelpers(OptionState.valueOf(enumValue));
+        case "generateMapperHelpers" ->
+            builder.generateMapperHelpers(OptionState.valueOf(enumValue));
         case "generateAddToCollectionHelpers" ->
             builder.generateAddToCollectionHelpers(OptionState.valueOf(enumValue));
         case "generateUnboxedOptional" ->

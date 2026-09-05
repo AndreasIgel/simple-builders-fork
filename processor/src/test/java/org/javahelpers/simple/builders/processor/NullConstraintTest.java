@@ -39,7 +39,10 @@ import org.junit.jupiter.api.Test;
 class NullConstraintTest {
 
   private Compilation compileSources(JavaFileObject... sources) {
-    Compilation compilation = createCompiler().compile(sources);
+    Compilation compilation =
+        createCompiler()
+            .withOptions("-Asimplebuilder.generateMapperHelpers=DISABLED")
+            .compile(sources);
     printDiagnosticsOnVerbose(compilation);
     return compilation;
   }

@@ -59,7 +59,9 @@ import org.junit.jupiter.api.Test;
 class ComprehensiveFeatureIntegrationTest {
 
   private static Compilation compile(JavaFileObject... sources) {
-    return ProcessorTestUtils.createCompiler().compile(sources);
+    return ProcessorTestUtils.createCompiler()
+        .withOptions("-Asimplebuilder.generateMapperHelpers=DISABLED")
+        .compile(sources);
   }
 
   @Test

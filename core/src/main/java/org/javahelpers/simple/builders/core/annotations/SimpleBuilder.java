@@ -57,8 +57,8 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
  *   <li><b>Conditional Logic:</b> generateConditionalHelper (default: true)
  *   <li><b>Access Control:</b> builderAccess, builderConstructorAccess, methodAccess (default:
  *       PUBLIC)
- *   <li><b>Collection Helpers:</b> generateVarArgsHelpers, usingArrayListBuilder,
- *       usingArrayListBuilderWithElementBuilders, usingHashSetBuilder,
+ *   <li><b>Collection Helpers:</b> generateVarArgsHelpers, generateMapperHelpers,
+ *       usingArrayListBuilder, usingArrayListBuilderWithElementBuilders, usingHashSetBuilder,
  *       usingHashSetBuilderWithElementBuilders, usingHashMapBuilder (all default: true)
  *   <li><b>Integration:</b> generateWithInterface (default: true)
  *   <li><b>Documentation:</b> generateJavaDoc (default: true)
@@ -330,6 +330,28 @@ public @interface SimpleBuilder {
      * Compiler option: -Asimplebuilder.generateStringFormatHelpers
      */
     OptionState generateStringFormatHelpers() default OptionState.UNSET;
+
+    /**
+     * Generate mapper helper methods for all fields. The generated method has the parameter type
+     * {@code UnaryOperator<T>} and transforms the current field value using the supplied operator.
+     * The field must already be set; otherwise the generated method throws {@link
+     * IllegalStateException}.
+     *
+     * <p>Example:
+     *
+     * <pre>{@code
+     * PersonDto person = PersonDtoBuilder.create()
+     *     .name("  bob ")
+     *     .mapName(String::trim)
+     *     .quantity(10)
+     *     .mapQuantity(q -> q * 2)
+     *     .build();
+     * }</pre>
+     *
+     * <p>Default: ENABLED <br>
+     * Compiler option: -Asimplebuilder.generateMapperHelpers
+     */
+    OptionState generateMapperHelpers() default OptionState.UNSET;
 
     /**
      * Generate add2FieldName helper methods for List and Set fields. <br>

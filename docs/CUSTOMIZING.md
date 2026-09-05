@@ -270,6 +270,7 @@ compileJava {
 | [`SetConsumerGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/SetConsumerGenerator.java) | Set consumer methods | 80 |
 | [`StringFormatHelperGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/StringFormatHelperGenerator.java) | String.format helpers | 80 |
 | [`SupplierMethodGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/SupplierMethodGenerator.java) | Supplier-based setters | 80 |
+| [`MapperHelperGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/MapperHelperGenerator.java) | UnaryOperator mapper helpers | 59 |
 | [`VarArgsHelperGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/VarArgsHelperGenerator.java) | Varargs helpers | 50 |
 | [`AddToCollectionGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/AddToCollectionGenerator.java) | add2FieldName methods for List/Set | 30 |
 | [`ArrayConversionGenerator`](../processor/src/main/java/org/javahelpers/simple/builders/processor/generators/field/ArrayConversionGenerator.java) | Array-from-List conversion methods | 35 |

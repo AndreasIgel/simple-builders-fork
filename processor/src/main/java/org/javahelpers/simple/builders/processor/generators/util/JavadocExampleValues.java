@@ -66,6 +66,16 @@ public final class JavadocExampleValues {
           PrimitiveTypeEnum.BOOLEAN, BOOLEAN_EXAMPLE,
           PrimitiveTypeEnum.CHAR, CHAR_EXAMPLE);
 
+  /** Map of primitive type enums to mapper expressions. */
+  private static final Map<PrimitiveTypeEnum, String> PRIMITIVE_MAPPER_EXAMPLES =
+      Map.of(
+          PrimitiveTypeEnum.INT, "value -> value * 2",
+          PrimitiveTypeEnum.LONG, "value -> value * 2",
+          PrimitiveTypeEnum.DOUBLE, "value -> value * 2",
+          PrimitiveTypeEnum.FLOAT, "value -> value * 2",
+          PrimitiveTypeEnum.BOOLEAN, "value -> !value",
+          PrimitiveTypeEnum.CHAR, "Character::toUpperCase");
+
   /** Map of wrapper and common JDK type FQNs to their example values. */
   private static final Map<String, String> COMMON_TYPE_EXAMPLES =
       Map.ofEntries(
@@ -83,6 +93,22 @@ public final class JavadocExampleValues {
           Map.entry("java.time.LocalDate", LOCALDATE_EXAMPLE),
           Map.entry("java.time.LocalTime", LOCALTIME_EXAMPLE),
           Map.entry("java.time.LocalDateTime", LOCALDATETIME_EXAMPLE));
+
+  /** Map of wrapper and common JDK type FQNs to mapper expressions. */
+  private static final Map<String, String> COMMON_TYPE_MAPPER_EXAMPLES =
+      Map.ofEntries(
+          Map.entry("java.lang.String", "String::trim"),
+          Map.entry("java.lang.Integer", "value -> value * 2"),
+          Map.entry("java.lang.Long", "value -> value * 2"),
+          Map.entry("java.lang.Double", "value -> value * 2"),
+          Map.entry("java.lang.Float", "value -> value * 2"),
+          Map.entry("java.lang.Boolean", "value -> !value"),
+          Map.entry("java.lang.Character", "Character::toUpperCase"),
+          Map.entry("java.math.BigInteger", "value -> value.add(BigInteger.ONE)"),
+          Map.entry("java.math.BigDecimal", "value -> value.add(BigDecimal.ONE)"),
+          Map.entry("java.time.LocalDate", "value -> value.plusDays(1)"),
+          Map.entry("java.time.LocalTime", "value -> value.plusHours(1)"),
+          Map.entry("java.time.LocalDateTime", "value -> value.plusHours(1)"));
 
   private JavadocExampleValues() {
     // Utility class - prevent instantiation
@@ -119,6 +145,29 @@ public final class JavadocExampleValues {
         .or(() -> resolveString(typeName))
         .or(() -> resolveEmptyConstructor(typeName))
         .or(() -> resolveBuilderType(typeName));
+  }
+
+  /**
+   * Returns a type-aware mapper expression for the given type, if available.
+   *
+   * <p>The expression is valid as an argument to {@code UnaryOperator<T>} for the given type and
+   * demonstrates a useful transformation where possible.
+   *
+   * @param typeName the type name to get a mapper expression for
+   * @return an Optional containing the mapper expression, or empty if no expression is available
+   */
+  public static Optional<String> getMapperExample(TypeName typeName) {
+    if (typeName instanceof TypeNamePrimitive primitive) {
+      return Optional.ofNullable(PRIMITIVE_MAPPER_EXAMPLES.get(primitive.getType()));
+    }
+    String fqn = typeName.getFullQualifiedName();
+    if (fqn != null && COMMON_TYPE_MAPPER_EXAMPLES.containsKey(fqn)) {
+      return Optional.of(COMMON_TYPE_MAPPER_EXAMPLES.get(fqn));
+    }
+    if ("String".equals(typeName.getClassName())) {
+      return Optional.of("String::trim");
+    }
+    return Optional.empty();
   }
 
   private static Optional<String> resolvePrimitive(TypeName typeName) {

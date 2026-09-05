@@ -78,6 +78,7 @@ import org.javahelpers.simple.builders.core.enums.OptionState;
             generateConditionalHelper = OptionState.DISABLED,
             generateVarArgsHelpers = OptionState.DISABLED,
             generateStringFormatHelpers = OptionState.DISABLED,
+            generateMapperHelpers = OptionState.DISABLED,
             generateAddToCollectionHelpers = OptionState.DISABLED,
             generateUnboxedOptional = OptionState.DISABLED,
             generateWithInterface = OptionState.DISABLED,

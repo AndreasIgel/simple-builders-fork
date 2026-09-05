@@ -6,6 +6,7 @@ import static org.javahelpers.simple.builders.core.util.TrackedValue.unsetValue;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import javax.annotation.processing.Generated;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.javahelpers.simple.builders.core.annotations.BuilderImplementation;
@@ -27,12 +28,15 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  *     .name("example value")
  *     .name("Hello %s", "World")
  *     .name(() -> "example value")
+ *     .mapName(String::trim)
  *     .name(sb -> sb.append("text"))
  *     .price(3.14)
  *     .price(() -> 3.14)
+ *     .mapPrice(value -> value * 2)
  *     .category("example value")
  *     .category("Hello %s", "World")
  *     .category(() -> "example value")
+ *     .mapCategory(String::trim)
  *     .category(sb -> sb.append("text"))
  *     .build();
  * }</pre>
@@ -167,6 +171,90 @@ public class ProductRecordBuilder implements IBuilderBase<ProductRecord> {
    */
   public ProductRecordBuilder category(String format, Object... args) {
     this.category = changedValue(String.format(format, args));
+    return this;
+  }
+
+  /**
+   * Transforms the current value of <code>category</code> in place by applying the given operator, instead of reading
+   * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
+   * <p>
+   * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
+   * ProductRecord(String name, double price, String category)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.mapCategory(String::trim);
+   * }</pre>
+   * 
+   * @param categoryMapper operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>category</code> has not been set yet
+   */
+  public ProductRecordBuilder mapCategory(UnaryOperator<String> categoryMapper) {
+    if (!this.category.isSet()) {
+      throw new IllegalStateException("Cannot map 'category' before it is set");
+    }
+    this.category = changedValue(categoryMapper.apply(this.category.value()));
+    return this;
+  }
+
+  /**
+   * Transforms the current value of <code>name</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
+   * <p>
+   * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
+   * ProductRecord(String name, double price, String category)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.mapName(String::trim);
+   * }</pre>
+   * 
+   * @param nameMapper operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>name</code> has not been set yet
+   */
+  public ProductRecordBuilder mapName(UnaryOperator<String> nameMapper) {
+    if (!this.name.isSet()) {
+      throw new IllegalStateException("Cannot map 'name' before it is set");
+    }
+    this.name = changedValue(nameMapper.apply(this.name.value()));
+    return this;
+  }
+
+  /**
+   * Transforms the current value of <code>price</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
+   * <p>
+   * Generated from parameter in constructor {@link ProductRecord#ProductRecord(String, double, String)
+   * ProductRecord(String name, double price, String category)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.mapPrice(value -> value * 2);
+   * }</pre>
+   * 
+   * @param priceMapper operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>price</code> has not been set yet
+   */
+  public ProductRecordBuilder mapPrice(UnaryOperator<Double> priceMapper) {
+    if (!this.price.isSet()) {
+      throw new IllegalStateException("Cannot map 'price' before it is set");
+    }
+    this.price = changedValue(priceMapper.apply(this.price.value()));
     return this;
   }
 

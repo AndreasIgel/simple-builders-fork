@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.UnaryOperator;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.javahelpers.simple.builders.core.util.BuilderToStringStyle;
 import org.javahelpers.simple.builders.core.util.TrackedValue;
@@ -26,22 +27,41 @@ import org.javahelpers.simple.builders.core.util.TrackedValue;
  * <pre>{@code
  * BookDto result = BookDtoBuilder.create()
  *     .author("example value")
+ *     .mapAuthor(String::trim)
  *     .available(true)
+ *     .mapAvailable(value -> !value)
  *     .category('x')
+ *     .mapCategory(Character::toUpperCase)
  *     .discount(3.14f)
+ *     .mapDiscount(value -> value * 2)
+ *     .mapEdition(value -> value)
  *     .exactPrice(BigDecimal.valueOf(3.14))
+ *     .mapExactPrice(value -> value.add(BigDecimal.ONE))
  *     .genres(Set.of("example value"))
+ *     .mapGenres(value -> value)
  *     .isbn("example value")
+ *     .mapIsbn(String::trim)
  *     .lastUpdated(LocalDateTime.now())
+ *     .mapLastUpdated(value -> value.plusHours(1))
  *     .metadata(Map.of("example value", "example value"))
+ *     .mapMetadata(value -> value)
  *     .pages(42)
+ *     .mapPages(value -> value * 2)
  *     .price(3.14)
+ *     .mapPrice(value -> value * 2)
  *     .publishDate(LocalDate.now())
+ *     .mapPublishDate(value -> value.plusDays(1))
  *     .publisher(PersonDtoBuilder.create().build())
+ *     .mapPublisher(value -> value)
+ *     .mapRating(value -> value)
  *     .salesCount(42L)
+ *     .mapSalesCount(value -> value * 2)
  *     .subtitle(Optional.of("example value"))
+ *     .mapSubtitle(value -> value)
  *     .tags(List.of("example value"))
+ *     .mapTags(value -> value)
  *     .title("example value")
+ *     .mapTitle(String::trim)
  *     .build();
  * }</pre>
  */
@@ -334,6 +354,519 @@ public class BookDtoBuilder {
    */
   public BookDtoBuilder lastUpdated(LocalDateTime lastUpdated) {
     this.lastUpdated = changedValue(lastUpdated);
+    return this;
+  }
+
+  /**
+   * Transforms the current value of <code>author</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
+   * <p>
+   * Generated from setter {@link BookDto#setAuthor(String) setAuthor(String author)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.mapAuthor(String::trim);
+   * }</pre>
+   * 
+   * @param authorMapper operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>author</code> has not been set yet
+   */
+  public BookDtoBuilder mapAuthor(UnaryOperator<String> authorMapper) {
+    if (!this.author.isSet()) {
+      throw new IllegalStateException("Cannot map 'author' before it is set");
+    }
+    this.author = changedValue(authorMapper.apply(this.author.value()));
+    return this;
+  }
+
+  /**
+   * Transforms the current value of <code>available</code> in place by applying the given operator, instead of reading
+   * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
+   * <p>
+   * Generated from setter {@link BookDto#setAvailable(boolean) setAvailable(boolean available)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.mapAvailable(value -> !value);
+   * }</pre>
+   * 
+   * @param availableMapper operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>available</code> has not been set yet
+   */
+  public BookDtoBuilder mapAvailable(UnaryOperator<Boolean> availableMapper) {
+    if (!this.available.isSet()) {
+      throw new IllegalStateException("Cannot map 'available' before it is set");
+    }
+    this.available = changedValue(availableMapper.apply(this.available.value()));
+    return this;
+  }
+
+  /**
+   * Transforms the current value of <code>category</code> in place by applying the given operator, instead of reading
+   * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
+   * <p>
+   * Generated from setter {@link BookDto#setCategory(char) setCategory(char category)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.mapCategory(Character::toUpperCase);
+   * }</pre>
+   * 
+   * @param categoryMapper operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>category</code> has not been set yet
+   */
+  public BookDtoBuilder mapCategory(UnaryOperator<Character> categoryMapper) {
+    if (!this.category.isSet()) {
+      throw new IllegalStateException("Cannot map 'category' before it is set");
+    }
+    this.category = changedValue(categoryMapper.apply(this.category.value()));
+    return this;
+  }
+
+  /**
+   * Transforms the current value of <code>discount</code> in place by applying the given operator, instead of reading
+   * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
+   * <p>
+   * Generated from setter {@link BookDto#setDiscount(float) setDiscount(float discount)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.mapDiscount(value -> value * 2);
+   * }</pre>
+   * 
+   * @param discountMapper operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>discount</code> has not been set yet
+   */
+  public BookDtoBuilder mapDiscount(UnaryOperator<Float> discountMapper) {
+    if (!this.discount.isSet()) {
+      throw new IllegalStateException("Cannot map 'discount' before it is set");
+    }
+    this.discount = changedValue(discountMapper.apply(this.discount.value()));
+    return this;
+  }
+
+  /**
+   * Transforms the current value of <code>edition</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
+   * <p>
+   * Generated from setter {@link BookDto#setEdition(short) setEdition(short edition)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.mapEdition(value -> value);
+   * }</pre>
+   * 
+   * @param editionMapper operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>edition</code> has not been set yet
+   */
+  public BookDtoBuilder mapEdition(UnaryOperator<Short> editionMapper) {
+    if (!this.edition.isSet()) {
+      throw new IllegalStateException("Cannot map 'edition' before it is set");
+    }
+    this.edition = changedValue(editionMapper.apply(this.edition.value()));
+    return this;
+  }
+
+  /**
+   * Transforms the current value of <code>exactPrice</code> in place by applying the given operator, instead of reading
+   * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
+   * <p>
+   * Generated from setter {@link BookDto#setExactPrice(BigDecimal) setExactPrice(BigDecimal exactPrice)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.mapExactPrice(value -> value.add(BigDecimal.ONE));
+   * }</pre>
+   * 
+   * @param exactPriceMapper operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>exactPrice</code> has not been set yet
+   */
+  public BookDtoBuilder mapExactPrice(UnaryOperator<BigDecimal> exactPriceMapper) {
+    if (!this.exactPrice.isSet()) {
+      throw new IllegalStateException("Cannot map 'exactPrice' before it is set");
+    }
+    this.exactPrice = changedValue(exactPriceMapper.apply(this.exactPrice.value()));
+    return this;
+  }
+
+  /**
+   * Transforms the current value of <code>genres</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
+   * <p>
+   * Generated from setter {@link BookDto#setGenres(Set) setGenres(Set<String> genres)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.mapGenres(value -> value);
+   * }</pre>
+   * 
+   * @param genresMapper operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>genres</code> has not been set yet
+   */
+  public BookDtoBuilder mapGenres(UnaryOperator<Set<String>> genresMapper) {
+    if (!this.genres.isSet()) {
+      throw new IllegalStateException("Cannot map 'genres' before it is set");
+    }
+    this.genres = changedValue(genresMapper.apply(this.genres.value()));
+    return this;
+  }
+
+  /**
+   * Transforms the current value of <code>isbn</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
+   * <p>
+   * Generated from setter {@link BookDto#setIsbn(String) setIsbn(String isbn)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.mapIsbn(String::trim);
+   * }</pre>
+   * 
+   * @param isbnMapper operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>isbn</code> has not been set yet
+   */
+  public BookDtoBuilder mapIsbn(UnaryOperator<String> isbnMapper) {
+    if (!this.isbn.isSet()) {
+      throw new IllegalStateException("Cannot map 'isbn' before it is set");
+    }
+    this.isbn = changedValue(isbnMapper.apply(this.isbn.value()));
+    return this;
+  }
+
+  /**
+   * Transforms the current value of <code>lastUpdated</code> in place by applying the given operator, instead of
+   * reading it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g.
+   * trimming, upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify
+   * flow. The value must have been set before (directly or via an existing instance). A <code>null</code> result is
+   * stored as-is and validated by <code>build()</code> like any other value.
+   * <p>
+   * Generated from setter {@link BookDto#setLastUpdated(LocalDateTime) setLastUpdated(LocalDateTime lastUpdated)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.mapLastUpdated(value -> value.plusHours(1));
+   * }</pre>
+   * 
+   * @param lastUpdatedMapper operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>lastUpdated</code> has not been set yet
+   */
+  public BookDtoBuilder mapLastUpdated(UnaryOperator<LocalDateTime> lastUpdatedMapper) {
+    if (!this.lastUpdated.isSet()) {
+      throw new IllegalStateException("Cannot map 'lastUpdated' before it is set");
+    }
+    this.lastUpdated = changedValue(lastUpdatedMapper.apply(this.lastUpdated.value()));
+    return this;
+  }
+
+  /**
+   * Transforms the current value of <code>metadata</code> in place by applying the given operator, instead of reading
+   * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
+   * <p>
+   * Generated from setter {@link BookDto#setMetadata(Map) setMetadata(Map<String, String> metadata)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.mapMetadata(value -> value);
+   * }</pre>
+   * 
+   * @param metadataMapper operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>metadata</code> has not been set yet
+   */
+  public BookDtoBuilder mapMetadata(UnaryOperator<Map<String, String>> metadataMapper) {
+    if (!this.metadata.isSet()) {
+      throw new IllegalStateException("Cannot map 'metadata' before it is set");
+    }
+    this.metadata = changedValue(metadataMapper.apply(this.metadata.value()));
+    return this;
+  }
+
+  /**
+   * Transforms the current value of <code>pages</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
+   * <p>
+   * Generated from setter {@link BookDto#setPages(int) setPages(int pages)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.mapPages(value -> value * 2);
+   * }</pre>
+   * 
+   * @param pagesMapper operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>pages</code> has not been set yet
+   */
+  public BookDtoBuilder mapPages(UnaryOperator<Integer> pagesMapper) {
+    if (!this.pages.isSet()) {
+      throw new IllegalStateException("Cannot map 'pages' before it is set");
+    }
+    this.pages = changedValue(pagesMapper.apply(this.pages.value()));
+    return this;
+  }
+
+  /**
+   * Transforms the current value of <code>price</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
+   * <p>
+   * Generated from setter {@link BookDto#setPrice(double) setPrice(double price)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.mapPrice(value -> value * 2);
+   * }</pre>
+   * 
+   * @param priceMapper operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>price</code> has not been set yet
+   */
+  public BookDtoBuilder mapPrice(UnaryOperator<Double> priceMapper) {
+    if (!this.price.isSet()) {
+      throw new IllegalStateException("Cannot map 'price' before it is set");
+    }
+    this.price = changedValue(priceMapper.apply(this.price.value()));
+    return this;
+  }
+
+  /**
+   * Transforms the current value of <code>publishDate</code> in place by applying the given operator, instead of
+   * reading it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g.
+   * trimming, upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify
+   * flow. The value must have been set before (directly or via an existing instance). A <code>null</code> result is
+   * stored as-is and validated by <code>build()</code> like any other value.
+   * <p>
+   * Generated from setter {@link BookDto#setPublishDate(LocalDate) setPublishDate(LocalDate publishDate)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.mapPublishDate(value -> value.plusDays(1));
+   * }</pre>
+   * 
+   * @param publishDateMapper operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>publishDate</code> has not been set yet
+   */
+  public BookDtoBuilder mapPublishDate(UnaryOperator<LocalDate> publishDateMapper) {
+    if (!this.publishDate.isSet()) {
+      throw new IllegalStateException("Cannot map 'publishDate' before it is set");
+    }
+    this.publishDate = changedValue(publishDateMapper.apply(this.publishDate.value()));
+    return this;
+  }
+
+  /**
+   * Transforms the current value of <code>publisher</code> in place by applying the given operator, instead of reading
+   * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
+   * <p>
+   * Generated from setter {@link BookDto#setPublisher(PersonDto) setPublisher(PersonDto publisher)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.mapPublisher(value -> value);
+   * }</pre>
+   * 
+   * @param publisherMapper operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>publisher</code> has not been set yet
+   */
+  public BookDtoBuilder mapPublisher(UnaryOperator<PersonDto> publisherMapper) {
+    if (!this.publisher.isSet()) {
+      throw new IllegalStateException("Cannot map 'publisher' before it is set");
+    }
+    this.publisher = changedValue(publisherMapper.apply(this.publisher.value()));
+    return this;
+  }
+
+  /**
+   * Transforms the current value of <code>rating</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
+   * <p>
+   * Generated from setter {@link BookDto#setRating(byte) setRating(byte rating)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.mapRating(value -> value);
+   * }</pre>
+   * 
+   * @param ratingMapper operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>rating</code> has not been set yet
+   */
+  public BookDtoBuilder mapRating(UnaryOperator<Byte> ratingMapper) {
+    if (!this.rating.isSet()) {
+      throw new IllegalStateException("Cannot map 'rating' before it is set");
+    }
+    this.rating = changedValue(ratingMapper.apply(this.rating.value()));
+    return this;
+  }
+
+  /**
+   * Transforms the current value of <code>salesCount</code> in place by applying the given operator, instead of reading
+   * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
+   * <p>
+   * Generated from setter {@link BookDto#setSalesCount(long) setSalesCount(long salesCount)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.mapSalesCount(value -> value * 2);
+   * }</pre>
+   * 
+   * @param salesCountMapper operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>salesCount</code> has not been set yet
+   */
+  public BookDtoBuilder mapSalesCount(UnaryOperator<Long> salesCountMapper) {
+    if (!this.salesCount.isSet()) {
+      throw new IllegalStateException("Cannot map 'salesCount' before it is set");
+    }
+    this.salesCount = changedValue(salesCountMapper.apply(this.salesCount.value()));
+    return this;
+  }
+
+  /**
+   * Transforms the current value of <code>subtitle</code> in place by applying the given operator, instead of reading
+   * it out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
+   * <p>
+   * Generated from setter {@link BookDto#setSubtitle(Optional) setSubtitle(Optional<String> subtitle)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.mapSubtitle(value -> value);
+   * }</pre>
+   * 
+   * @param subtitleMapper operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>subtitle</code> has not been set yet
+   */
+  public BookDtoBuilder mapSubtitle(UnaryOperator<Optional<String>> subtitleMapper) {
+    if (!this.subtitle.isSet()) {
+      throw new IllegalStateException("Cannot map 'subtitle' before it is set");
+    }
+    this.subtitle = changedValue(subtitleMapper.apply(this.subtitle.value()));
+    return this;
+  }
+
+  /**
+   * Transforms the current value of <code>tags</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
+   * <p>
+   * Generated from setter {@link BookDto#setTags(List) setTags(List<String> tags)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.mapTags(value -> value);
+   * }</pre>
+   * 
+   * @param tagsMapper operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>tags</code> has not been set yet
+   */
+  public BookDtoBuilder mapTags(UnaryOperator<List<String>> tagsMapper) {
+    if (!this.tags.isSet()) {
+      throw new IllegalStateException("Cannot map 'tags' before it is set");
+    }
+    this.tags = changedValue(tagsMapper.apply(this.tags.value()));
+    return this;
+  }
+
+  /**
+   * Transforms the current value of <code>title</code> in place by applying the given operator, instead of reading it
+   * out, changing it and setting it again. Useful for adjustments relative to the current value, e.g. trimming,
+   * upper-casing, clamping or incrementing, and in combination with the <code>With</code> copy-and-modify flow. The
+   * value must have been set before (directly or via an existing instance). A <code>null</code> result is stored as-is
+   * and validated by <code>build()</code> like any other value.
+   * <p>
+   * Generated from setter {@link BookDto#setTitle(String) setTitle(String title)}
+   * 
+   * <h4>Example:</h4>
+   * 
+   * <pre>{@code
+   * builder.mapTitle(String::trim);
+   * }</pre>
+   * 
+   * @param titleMapper operator applied to the current value; its result becomes the new value
+   * @return current instance of builder
+   * @throws IllegalStateException if <code>title</code> has not been set yet
+   */
+  public BookDtoBuilder mapTitle(UnaryOperator<String> titleMapper) {
+    if (!this.title.isSet()) {
+      throw new IllegalStateException("Cannot map 'title' before it is set");
+    }
+    this.title = changedValue(titleMapper.apply(this.title.value()));
     return this;
   }
 

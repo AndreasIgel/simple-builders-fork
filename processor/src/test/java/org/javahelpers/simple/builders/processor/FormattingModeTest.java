@@ -77,7 +77,9 @@ class FormattingModeTest {
 
     Compilation compilation =
         ProcessorTestUtils.createCompiler()
-            .withOptions("-Asimplebuilder.formattingMode=lightweight")
+            .withOptions(
+                "-Asimplebuilder.formattingMode=lightweight",
+                "-Asimplebuilder.generateMapperHelpers=DISABLED")
             .compile(sourceFile);
 
     assertThat(compilation).succeeded();
@@ -385,7 +387,10 @@ class FormattingModeTest {
             }
             """);
 
-    Compilation compilation = ProcessorTestUtils.createCompiler().compile(sourceFile);
+    Compilation compilation =
+        ProcessorTestUtils.createCompiler()
+            .withOptions("-Asimplebuilder.generateMapperHelpers=DISABLED")
+            .compile(sourceFile);
 
     assertThat(compilation).succeeded();
 
