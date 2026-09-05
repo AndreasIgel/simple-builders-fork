@@ -8,6 +8,15 @@
 # It runs on `workflow_run` in the base-repo context (with secrets), and is
 # protected by the `fork-ci` GitHub Environment with Required reviewers.
 # Do NOT remove that environment gate.
+#
+# Security model (see docs/CONTRIBUTING.md, "CI for pull requests from forks"):
+# nothing fork-controlled is ever *executed* here. Maven only runs against the
+# trusted base-branch checkout (to resolve the dependency classpath); the fork
+# PR head is then fetched as plain git objects and analysed by the standalone
+# Sonar scanner, whose configuration is written by this workflow and passed via
+# `project.settings`, so a `sonar-project.properties`, `pom.xml`, `.mvn/`, or
+# wrapper script in the fork tree is inert data. Do NOT reintroduce a Maven
+# invocation (or any build tool) on the fork tree in this workflow.
 name: Fork SonarCloud (manual approval)
 
 on:
@@ -36,8 +45,8 @@ jobs:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
       - name: Download successful fork PR analysis inputs
-        # Store outside the workspace so the later source checkout (which cleans
-        # the workspace) does not remove these files.
+        # Store outside the workspace so the later checkout (which cleans the
+        # workspace) does not remove these files.
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: sonar-analysis-inputs
@@ -53,23 +62,25 @@ jobs:
         run: |
           env_file="$RUNNER_TEMP/sonar-analysis-data/pr-event.env"
           pr_number=$(grep -m1 '^pr_number=' "$env_file" | cut -d= -f2-)
+          pr_head_sha=$(grep -m1 '^pr_head_sha=' "$env_file" | cut -d= -f2-)
           pr_head_ref=$(grep -m1 '^pr_head_ref=' "$env_file" | cut -d= -f2-)
           pr_base_ref=$(grep -m1 '^pr_base_ref=' "$env_file" | cut -d= -f2-)
           [[ "$pr_number" =~ ^[0-9]+$ ]] || { echo "invalid pr_number"; exit 1; }
+          [[ "$pr_head_sha" =~ ^[0-9a-f]{40}$ ]] || { echo "invalid pr_head_sha"; exit 1; }
           [[ "$pr_head_ref" =~ ^[A-Za-z0-9._/-]+$ ]] || { echo "invalid pr_head_ref"; exit 1; }
           [[ "$pr_base_ref" =~ ^[A-Za-z0-9._/-]+$ ]] || { echo "invalid pr_base_ref"; exit 1; }
           {
             echo "pr_number=$pr_number"
+            echo "pr_head_sha=$pr_head_sha"
             echo "pr_head_ref=$pr_head_ref"
             echo "pr_base_ref=$pr_base_ref"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Check out fork PR source (from the base repo's PR ref)
+      - name: Check out trusted base branch
+        # No `ref`: this is the base repository's default branch, i.e. trusted
+        # code. It is the only tree Maven ever runs against in this workflow.
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # The fork head SHA is not present in the base repo, but the PR head
-          # ref is. Check that out so Sonar can read the analysed source.
-          ref: refs/pull/${{ steps.meta.outputs.pr_number }}/head
           fetch-depth: 0
 
       - name: Set up JDK 17
@@ -86,26 +97,79 @@ jobs:
           key: ${{ runner.os }}-sonar-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-sonar
 
+      - name: Resolve dependency classpath from the trusted base pom
+        # The Java analyzer needs the dependency jars for full type resolution.
+        # Resolve them from the base branch's pom (not the fork's) so that the
+        # only pom Maven parses is trusted. A dependency added by the fork PR
+        # is simply unresolved in the analysis; it is never downloaded here.
+        run: |
+          mvn -B -q -DskipTests -Dfmt.skip -pl core install
+          mvn -B -q -pl processor dependency:build-classpath \
+            -Dmdep.includeScope=test \
+            -Dmdep.pathSeparator=, \
+            -DexcludeGroupIds=io.github.java-helpers \
+            -Dmdep.outputFile="$RUNNER_TEMP/sonar-libraries.txt"
+
+      - name: Fetch fork PR source as git data (not executed)
+        # The PR head exists in the base repo as refs/pull/N/head. Fetching and
+        # checking it out only writes files and gives Sonar the SCM history it
+        # needs to compute changed lines; nothing in the fork tree is run. The
+        # checked-out commit must be the one the analysis inputs were built from.
+        env:
+          PR_NUMBER: ${{ steps.meta.outputs.pr_number }}
+          PR_HEAD_SHA: ${{ steps.meta.outputs.pr_head_sha }}
+        run: |
+          git fetch --no-tags origin "refs/pull/$PR_NUMBER/head"
+          [ "$(git rev-parse FETCH_HEAD)" = "$PR_HEAD_SHA" ] || {
+            echo "::error::PR head $(git rev-parse FETCH_HEAD) does not match analysed commit $PR_HEAD_SHA"
+            exit 1
+          }
+          git -c advice.detachedHead=false checkout --detach FETCH_HEAD
+
       - name: Restore compiled classes and coverage reports
         run: |
           src="$RUNNER_TEMP/sonar-analysis-data"
           mkdir -p core/target/classes processor/target/classes
+          mkdir -p core/target/test-classes processor/target/test-classes
           cp -a "$src/core-classes/." core/target/classes/ 2>/dev/null || true
           cp -a "$src/processor-classes/." processor/target/classes/ 2>/dev/null || true
+          cp -a "$src/core-test-classes/." core/target/test-classes/ 2>/dev/null || true
+          cp -a "$src/processor-test-classes/." processor/target/test-classes/ 2>/dev/null || true
           mkdir -p processor/target/site/jacoco processor/target/site/jacoco-aggregate
           cp -a "$src/processor-jacoco.xml" processor/target/site/jacoco/jacoco.xml 2>/dev/null || true
           cp -a "$src/jacoco-aggregate.xml" processor/target/site/jacoco-aggregate/jacoco.xml 2>/dev/null || true
 
+      - name: Write scanner configuration
+        # Written outside the workspace and selected via `project.settings`, so
+        # a sonar-project.properties in the fork tree is never read.
+        # Keep the sonar.* values in sync with the <properties> in pom.xml.
+        run: |
+          libraries="$(cat "$RUNNER_TEMP/sonar-libraries.txt")"
+          cat > "$RUNNER_TEMP/sonar-project.properties" <<EOF
+          sonar.projectKey=java-helpers_simple-builders
+          sonar.organization=java-helpers
+          sonar.projectName=Simple Builders
+          sonar.sources=core/src/main/java,processor/src/main/java
+          sonar.tests=core/src/test/java,processor/src/test/java
+          sonar.java.source=17
+          sonar.java.binaries=core/target/classes,processor/target/classes
+          sonar.java.test.binaries=core/target/test-classes,processor/target/test-classes
+          sonar.java.libraries=$libraries
+          sonar.java.test.libraries=$libraries
+          sonar.coverage.jacoco.xmlReportPaths=processor/target/site/jacoco-aggregate/jacoco.xml,processor/target/site/jacoco/jacoco.xml
+          sonar.exclusions=**/example/**
+          sonar.coverage.exclusions=**/processor/model/**,**/exceptions/**,**/generated/**
+          sonar.scm.provider=git
+          EOF
+
       - name: Publish fork PR analysis to SonarCloud
         if: env.SONAR_TOKEN != ''
+        uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8.2.1
         env:
-          PR_KEY: ${{ steps.meta.outputs.pr_number }}
-          PR_BRANCH: ${{ steps.meta.outputs.pr_head_ref }}
-          PR_BASE: ${{ steps.meta.outputs.pr_base_ref }}
-        run: |
-          mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-            --file pom.xml \
-            -DskipTests \
-            -Dsonar.pullrequest.key="$PR_KEY" \
-            -Dsonar.pullrequest.branch="$PR_BRANCH" \
-            -Dsonar.pullrequest.base="$PR_BASE"
+          SONAR_HOST_URL: https://sonarcloud.io
+        with:
+          args: >
+            -Dproject.settings=${{ runner.temp }}/sonar-project.properties
+            -Dsonar.pullrequest.key=${{ steps.meta.outputs.pr_number }}
+            -Dsonar.pullrequest.branch=${{ steps.meta.outputs.pr_head_ref }}
+            -Dsonar.pullrequest.base=${{ steps.meta.outputs.pr_base_ref }}

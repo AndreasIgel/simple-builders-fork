@@ -375,6 +375,27 @@ requests from forks, so the secret-backed quality checks are handled specially:
   run** (in the Actions/Environments prompt) before it executes. It does not
   rebuild or retest fork code with the token.
 
+  The workflow is designed so that **no fork-controlled content is executed**
+  while the token is present, independent of the approval gate:
+  - Maven runs only against the trusted base-branch checkout, to resolve the
+    dependency classpath. The fork's `pom.xml`, `.mvn/` directory and wrapper
+    scripts are never parsed or run (they can execute arbitrary code, which is
+    what SonarCloud rule S7631 flags for privileged `workflow_run` jobs).
+  - The fork PR head is then fetched as plain git data from the base repo's
+    `refs/pull/N/head`, verified to be the commit the CI artifact was built
+    from, and checked out so the scanner can read the sources and compute
+    changed lines from SCM history.
+  - Analysis runs with the standalone Sonar scanner (`sonarqube-scan-action`),
+    not the Maven plugin. Its configuration is written by the workflow outside
+    the workspace and selected via `project.settings`, so a
+    `sonar-project.properties` in the fork tree is ignored (that file could
+    otherwise point the scanner at an attacker-supplied Java executable).
+
+  Residual exposure is limited to the scanner *reading* untrusted sources and
+  bytecode, which is the same exposure as analysing any PR. The `sonar.*`
+  properties in the workflow mirror those in the root `pom.xml`; keep them in
+  sync when changing analysis settings.
+
 ## Questions?
 
 If you have questions or need help:
