@@ -556,12 +556,14 @@ public class RoasterCodeGenerator {
 
   private void addParameter(
       MethodSource<?> method, MethodParameterDto paramDto, boolean lastParameter) {
-    String parameterType =
-        lastParameter && paramDto.getParameterType() instanceof TypeNameArray arrayType
-            ? mapType(arrayType.getTypeOfArray())
-            : mapType(paramDto.getParameterType());
-    ParameterSource<?> parameter = method.addParameter(parameterType, paramDto.getParameterName());
-    if (lastParameter && paramDto.getParameterType() instanceof TypeNameArray) {
+    boolean varArgs = lastParameter && paramDto.getParameterType() instanceof TypeNameArray;
+    TypeName parameterType =
+        varArgs
+            ? ((TypeNameArray) paramDto.getParameterType()).getTypeOfArray()
+            : paramDto.getParameterType();
+    ParameterSource<?> parameter =
+        method.addParameter(mapType(parameterType), paramDto.getParameterName());
+    if (varArgs) {
       parameter.setVarArgs(true);
     }
     applyAnnotations(parameter, paramDto.getAnnotations());
