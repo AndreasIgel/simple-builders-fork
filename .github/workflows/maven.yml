@@ -106,6 +106,8 @@ jobs:
         mkdir -p sonar-analysis-data
         cp -a core/target/classes sonar-analysis-data/core-classes 2>/dev/null || true
         cp -a processor/target/classes sonar-analysis-data/processor-classes 2>/dev/null || true
+        cp -a core/target/test-classes sonar-analysis-data/core-test-classes 2>/dev/null || true
+        cp -a processor/target/test-classes sonar-analysis-data/processor-test-classes 2>/dev/null || true
         cp -a processor/target/site/jacoco-aggregate/jacoco.xml sonar-analysis-data/jacoco-aggregate.xml 2>/dev/null || true
         cp -a processor/target/site/jacoco/jacoco.xml sonar-analysis-data/processor-jacoco.xml 2>/dev/null || true
         {
